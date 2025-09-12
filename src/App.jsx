@@ -1,13 +1,18 @@
 import React from "react";
-import Nav from "./components/Nav";
+import Layout from "./components/Layout";
 import Hero from "./components/Hero";
 import Signup from "./components/Signup";
 import Add from  "./components/Add"
 import Login from "./components/Login";
 import Account from "./components/Account";
 import BlogDetail from "./components/BlogDetail";
-import Dashboard from "./components/Dashboard";
-import Users from "./components/Users";
+import Dashboard from "./components/Admin/Dashboard";
+import Approvels from "./components/Admin/Approvals";
+import Permissions from "./components/Admin/permissions";
+import Users from "./components/Admin/Users";
+import AdminLayout from "./components/Admin/AdminLayout";
+import ChatBoard from "./components/User/ChatBoard";
+import DebugPermissions from "./components/DebugPermissions";
 import { AuthProvider } from "../context/authcontext";
 import { useAuth } from "../context/authcontext";
 
@@ -19,17 +24,20 @@ const App = () => {
     <>
       <BrowserRouter>
       <AuthProvider>
-        <Nav />
         <Routes>
-          <Route path="/" element={<Hero />}        />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/dashboard/users" element={<Users />} />
-          <Route path="/Add" element={<Add />}       />
-          <Route path="/Signup" element={<Signup />} />
-          <Route path="/Login" element={<Login/>}    />
-          <Route path="/Account" element={<Account/>}/>
-          <Route path="/blog/:id" element={<BlogDetail />} />
+          <Route path="/" element={<Layout><Hero /></Layout>} />
+          <Route path="/dashboard" element={<AdminLayout><Dashboard /></AdminLayout>} />
+          <Route path="/users" element={<AdminLayout><Users /></AdminLayout>} />
+          <Route path="/dashboard/approvals" element={<AdminLayout><Approvels /></AdminLayout>} />
+          <Route path="/dashboard/permissions" element={<AdminLayout><Permissions /></AdminLayout>} />
+          <Route path="/dashboard/users" element={<AdminLayout><Users /></AdminLayout>} />
+          <Route path="/Add" element={<Layout><Add /></Layout>} />
+          <Route path="/Signup" element={<Layout><Signup /></Layout>} />
+          <Route path="/Login" element={<Layout><Login /></Layout>} />
+          <Route path="/Account/:id" element={<Layout><Account /></Layout>} />
+          <Route path="/blog/:id" element={<Layout><BlogDetail /></Layout>} />
+          <Route path="/chat" element={<Layout><ChatBoard /></Layout>} />
+          <Route path="/debug" element={<Layout><DebugPermissions /></Layout>} />
         </Routes>
         </AuthProvider>
       </BrowserRouter>

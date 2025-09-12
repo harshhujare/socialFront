@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api, { API_BASE_URL } from '../lib/api';
 import { useAuth } from '../../context/authcontext';
+import { hasPermission } from '../lib/permissions';
 
 function stringToColor(str) {
   let hash = 0;
@@ -36,6 +37,8 @@ const BlogDetail = () => {
   const [commentError, setCommentError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [copying, setCopying] = useState(false);
+  const [canComment, setCanComment] = useState(false);
+  const [canLike, setCanLike] = useState(false);
 
   const normalizeId = (value) => {
     try {
@@ -47,6 +50,33 @@ const BlogDetail = () => {
       return String(value);
     }
   };
+
+  // Check permissions for comment and like
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (!user?.role) {
+        setCanComment(false);
+        setCanLike(false);
+        return;
+      }
+
+      try {
+        const [commentPermission, likePermission] = await Promise.all([
+          hasPermission(user.role, 'comment'),
+          hasPermission(user.role, 'like')
+        ]);
+        
+        setCanComment(commentPermission);
+        setCanLike(likePermission);
+      } catch (error) {
+        console.error('Error checking permissions:', error);
+        setCanComment(false);
+        setCanLike(false);
+      }
+    };
+
+    checkPermissions();
+  }, [user?.role]);
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -76,7 +106,7 @@ const BlogDetail = () => {
       const scrollTop = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = (scrollTop / docHeight) * 100;
-      setReadingProgress(Math.min(progress, 100));
+      setReadingProgress(Math.min(progress,100));
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -173,6 +203,9 @@ const BlogDetail = () => {
       }
     } catch (err) {
       console.error('Failed to toggle like', err);
+      if (err.response?.status === 403) {
+        alert('You don\'t have permission to like posts');
+      }
     } finally {
       setLiking(false);
     }
@@ -198,6 +231,9 @@ const BlogDetail = () => {
       }
     } catch (err) {
       console.error('Failed to add comment', err);
+      if (err.response?.status === 403) {
+        alert('You don\'t have permission to comment');
+      }
     } finally {
       setPostingComment(false);
     }
@@ -246,7 +282,11 @@ const BlogDetail = () => {
       setDeletingCommentId(null);
     }
   };
-
+  //  console.log("blog user id",blog.userid);
+  const handleView = () => {
+   
+    navigate(`/Account/${blog.userid}`);
+  };
   // Loading state
   if (loading) {
     return (
@@ -394,8 +434,8 @@ const BlogDetail = () => {
               </h1>
 
               {/* Author Info */}
-              <div className="flex items-center justify-center gap-4 mb-8">
-                <div
+              <div className="flex items-center justify-center gap-4 mb-8" >
+                <div   onClick={(e) => { e.stopPropagation(); handleView(); }}
                   className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold shadow-lg border-2 border-white/30 transition-transform hover:scale-110"
                   style={{ background: avatarColor, color: '#fff' }}
                   title={blog.createdby}
@@ -436,9 +476,9 @@ const BlogDetail = () => {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={handleToggleLike}
-                      disabled={liking}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${liked ? 'bg-pink-600 text-white' : 'bg-white/10 text-white hover:bg-white/20'} `}
-                      title={IsLoggedIn ? (liked ? 'Unlike' : 'Like') : 'Login to like'}
+                      disabled={liking || !canLike}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${liked ? 'bg-pink-600 text-white' : 'bg-white/10 text-white hover:bg-white/20'} ${!canLike ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      title={!IsLoggedIn ? 'Login to like' : !canLike ? 'You don\'t have permission to like' : (liked ? 'Unlike' : 'Like')}
                     >
                       <svg className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} viewBox="0 0 20 20">
                         <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 18.828l-6.828-6.829a4 4 0 010-5.656z" />
@@ -504,13 +544,13 @@ const BlogDetail = () => {
                       type="text"
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
-                      placeholder={IsLoggedIn ? 'Write a comment...' : 'Login to write a comment'}
-                      disabled={!IsLoggedIn || postingComment}
+                      placeholder={!IsLoggedIn ? 'Login to write a comment' : !canComment ? 'You don\'t have permission to comment' : 'Write a comment...'}
+                      disabled={!IsLoggedIn || postingComment || !canComment}
                       className="flex-1 px-4 py-2 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-blue-200"
                     />
                     <button
                       type="submit"
-                      disabled={!IsLoggedIn || postingComment || !newComment.trim()}
+                      disabled={!IsLoggedIn || postingComment || !newComment.trim() || !canComment}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl"
                     >
                       {postingComment ? 'Posting...' : 'Post'}

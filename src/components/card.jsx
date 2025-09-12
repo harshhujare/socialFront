@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Card = ({ id, title, titalimg, summary, createdby, likes = 0, comments = 0 }) => {
+const Card = ({ id, title, titalimg, summary, createdby, createdAt, likes = 0, comments = 0 }) => {
   const navigate = useNavigate();
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -93,7 +93,7 @@ const Card = ({ id, title, titalimg, summary, createdby, likes = 0, comments = 0
             <span className="text-xs text-blue-300">
               By <span className="font-semibold text-blue-200">{createdby || 'Anonymous'}</span>
             </span>
-            <span className="text-xs text-gray-400 mt-1">{formatDate(new Date())}</span>
+            <span className="text-xs text-gray-400 mt-1">{formatDate(createdAt)}</span>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); handleView(); }}

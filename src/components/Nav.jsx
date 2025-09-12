@@ -5,13 +5,15 @@ import { useWindowScroll } from "react-use";
 import { useRef } from "react";
 import { useAuth } from "../../context/authcontext";
 import Btn from "./Btn";
+import { hasPermission } from "../lib/permissions";
 
 const Nav = () => {
   const { y: currentScrollY } = useWindowScroll();
   const [lastScroll, setLastScroll] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const { IsLoggedIn, SetIsLoggedIn } = useAuth();
+  const { IsLoggedIn, SetIsLoggedIn, user } = useAuth();
   const navRef = useRef(null);
+  const [canAddBlog, setCanAddBlog] = useState(false);
 
   const checkLogin = async () => {
     try {
@@ -22,8 +24,31 @@ const Nav = () => {
     }
   };
 
+  // Check if user can add blog
   useEffect(() => {
-    checkLogin();
+    const checkAddBlogPermission = async () => {
+      // Only check if user is logged in and has a role
+      if (!IsLoggedIn || !user?.role) {
+        setCanAddBlog(false);
+        return;
+      }
+
+      try {
+        // console.log('Checking addBlog permission for role:', user.role);
+        const canAdd = await hasPermission(user.role, 'addBlog');
+        console.log('Can add blog:',user.role, canAdd);
+        setCanAddBlog(canAdd);
+      } catch (error) {
+        console.error('Error checking add blog permission:', error);
+        setCanAddBlog(false);
+      }
+    };
+
+    checkAddBlogPermission();
+  }, [IsLoggedIn, user]);  // Depend on the entire user object to ensure it runs when user data changes
+
+  useEffect(() => {
+    
 
     if (currentScrollY === 0) {
       setIsVisible(false);
@@ -52,7 +77,7 @@ const Nav = () => {
           </div>
           <div className="flex py-3 px-2 text-white items-center justify-center gap-8">
             <Link to="/"> Home</Link>
-            <Link to="/Add"> Add Blog</Link>
+            {canAddBlog && <Link to="/Add"> Post</Link>}
 
             {!IsLoggedIn ? (
               <Link to="/Signup">
@@ -60,7 +85,10 @@ const Nav = () => {
                 <Btn tital="Signup" />
               </Link>
             ) : (
-              <Link to="/Account">Account</Link>
+              <>
+              <Link to="/chat"> Messages</Link>
+              <Link to={`/Account/${user?._id}`}>Account</Link></>
+              
             )}
           </div>
         </nav>

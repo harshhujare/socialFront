@@ -1,19 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import api, { API_BASE_URL } from '../lib/api';
+import api, { API_BASE_URL } from '../../lib/api';
+import { useAuth } from '../../../context/authcontext.jsx';
 
 const statusColor = (isActive) => (isActive ? 'text-emerald-300 bg-emerald-500/10 border-emerald-400/30' : 'text-rose-300 bg-rose-500/10 border-rose-400/30');
 
 const Users = () => {
+  const { user: currentUser } = useAuth?.() || { user: null };
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [users, setUsers] = useState([]);
+  const [saving, setSaving] = useState({}); // map of userId -> boolean
+  const [actionError, setActionError] = useState(null);
 
-  const fetchUsers = async (q = '') => {
+  const fetchUsers = async (q = '') => { 
     try {
       setLoading(true);
       setError(null);
       const res = await api.get(`/user/list`, { params: { q } });
+      console.log("Fetched users:", res.data?.users);
       setUsers(Array.isArray(res.data?.users) ? res.data.users : []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load users');
@@ -23,6 +28,19 @@ const Users = () => {
   };
 
   useEffect(() => { fetchUsers(); }, []);
+
+  const updateUserRole = async (userId, role) => {
+    try {
+      setActionError(null);
+      setSaving(prev => ({ ...prev, [userId]: true }));
+      await api.put('/user/role', { userId, role });
+      setUsers(prev => prev.map(u => (u._id === userId ? { ...u, role } : u)));
+    } catch (err) {
+      setActionError(err?.response?.data?.message || 'Failed to update role');
+    } finally {
+      setSaving(prev => ({ ...prev, [userId]: false }));
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -61,6 +79,8 @@ const Users = () => {
             <div className="p-6 text-center text-white">Loading users...</div>
           ) : error ? (
             <div className="p-6 text-center text-rose-300">{error}</div>
+          ) : actionError ? (
+            <div className="p-6 text-center text-rose-300">{actionError}</div>
           ) : filtered.length === 0 ? (
             <div className="p-6 text-center text-blue-200">No users found.</div>
           ) : (
@@ -81,7 +101,21 @@ const Users = () => {
                   </div>
                   <div className="col-span-4 text-blue-100">{u.email}</div>
                   <div className="col-span-2">
-                    <span className="px-2 py-1 rounded-lg bg-white/10 border border-white/10 text-blue-100 text-xs">{u.role}</span>
+                    <div className="flex items-center gap-2">
+                      <select
+                        disabled={saving[u._id] || (currentUser && currentUser._id === u._id)}
+                        value={u.role}
+                        onChange={(e) => updateUserRole(u._id, e.target.value)}
+                        className="px-2 py-1 rounded-lg bg-white/10 border border-white/10 text-blue-100 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-60"
+                      >
+                        {['USER','ADMIN','APPROVER'].map(r => (
+                          <option key={r} value={r} className="bg-[#23234b] text-white">{r}</option>
+                        ))}
+                      </select>
+                      {saving[u._id] && (
+                        <span className="text-xs text-blue-200">Saving...</span>
+                      )}
+                    </div>
                   </div>
                   <div className="col-span-1 text-right">
                     <span className={`px-2 py-1 rounded-lg border text-xs ${statusColor(u.isActive)}`}>{u.isActive ? 'Active' : 'Inactive'}</span>

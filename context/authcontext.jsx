@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 
 const Authcontext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children },get) => {
   const navigate = useNavigate();
-
+const [Socket, setSocket] = useState(null)
   const [blogcount, setBlogCount] = useState(0);
   const [userid, setUserId] = useState(null);
   const [IsLoggedIn, SetIsLoggedIn] = useState(() => {
@@ -37,39 +37,66 @@ export const AuthProvider = ({ children }) => {
  
   useEffect(() => {
     const checkAuth = async () => {
-      if (IsLoggedIn && !user) {
-        try {
-          const res = await api.get("/auth/check");
+      if (!IsLoggedIn) return;
+      try {
+        const res = await api.get("/auth/check");
+        if (res?.data?.loggedIn && res?.data?.user) {
           setUser(res.data.user);
+          connectSocket();
 
-          
-        } catch (err) {
-          console.log("got error");
+        } else {
           SetIsLoggedIn(false);
+          setUser(null);
         }
+      } catch (err) {
+        console.log("auth check error", err?.message || err);
+        SetIsLoggedIn(false);
+        setUser(null);
       }
     };
 
     checkAuth();
-  }, [IsLoggedIn]);
+  }, []);
   useEffect(() => {
     localStorage.setItem("isLoggedIn", IsLoggedIn);
     localStorage.setItem("user", JSON.stringify(user));
   }, [IsLoggedIn, user]);
+//=================//
+   const login = async (email, password) => {
+    try {
+      const res = await api.post(
+        "/user/Login",
+        {
+          email,
+          password
+        }
+      );
+      if (res.data.success) {
+        SetIsLoggedIn(true);
+        setUser(res.data.user); // Update user state with user data from response
+        navigate("/");
+        connectSocket();
+      }
+    } catch (err) {
+      console.log("error is error", err);
+    }
+   }
 
-  
+   //----------=============----------//
   const signup = async (fullname, email, password) => {
     try {
-      console.log("net");
+     
       const res = await api.post(
         "/user/signup",
         { fullname, email, password }
       );
-      console.log("first");
+     
       if (res.data.success) {
         setUser(res.data.user);
         SetIsLoggedIn(true);
         return { success: true };
+        connectSocket();
+
       }
       return { success: false, message: res.data.error };
     } catch (err) {
@@ -79,6 +106,7 @@ export const AuthProvider = ({ children }) => {
       }
       return { success: false, message: err?.response?.data?.error || "Signup failed" };
     }
+
   };
   const handelLogout = async () => {
     try {
@@ -86,6 +114,7 @@ export const AuthProvider = ({ children }) => {
       if (res.data.success) {
         localStorage.removeItem("user");
         localStorage.removeItem("isLoggedIn");
+        disconnectSocket();
         setUser(null);
         SetIsLoggedIn(false);
         setUserId(null);
@@ -96,7 +125,16 @@ export const AuthProvider = ({ children }) => {
       
     }
   };
+const  connectSocket =()=>{
 
+
+
+}
+const  disconnectSocket =()=>{
+
+
+
+}
   
   const value = useMemo(
     () => ({
@@ -109,6 +147,7 @@ export const AuthProvider = ({ children }) => {
       userid,
       setUserId,
       handelLogout,
+      login,
     }),
     [IsLoggedIn, user]
   );

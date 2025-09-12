@@ -1,17 +1,11 @@
 import React from "react";
 import {
-  FiHome,
-  FiTable,
   FiCreditCard,
   FiGlobe,
   FiUser,
-  FiLogIn,
-  FiUserPlus,
-  FiSearch,
   FiShoppingCart,
 } from "react-icons/fi";
-import { Link } from "react-router-dom";
-import Users from "./Users";
+import { useAuth } from "../../../context/authcontext";
 
 const StatCard = ({ icon: Icon, label, value, delta, positive }) => {
   return (
@@ -31,6 +25,7 @@ const StatCard = ({ icon: Icon, label, value, delta, positive }) => {
     </div>
   );
 };
+
 
 const Gauge = ({ percent = 95 }) => {
   const stroke = 10;
@@ -115,110 +110,44 @@ const Bars = () => {
 };
 
 const Dashboard = () => {
-  const [activeView, setActiveView] = React.useState("overview");
+  const { user } = useAuth();
   return (
-    <div className="min-h-screen w-full pt-20 flex items-center justify-center flex-col px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
-      {/* Top bar */}
+    <div className="w-full flex items-center justify-center flex-col px-6 relative overflow-hidden">
+      {/* Main content */}
+      <main className="w-full p-6 space-y-6">
+        {/* Stats row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <StatCard
+            icon={FiCreditCard}
+            label="Today's Money"
+            value="$53,000"
+            delta="+55%"
+            positive
+          />
+          <StatCard
+            icon={FiGlobe}
+            label="Today's Users"
+            value="2,300"
+            delta="+5%"
+            positive
+          />
+          <StatCard
+            icon={FiUser}
+            label="New Clients"
+            value="+3,052"
+            delta="-14%"
+          />
+          <StatCard
+            icon={FiShoppingCart}
+            label="Total Sales"
+            value="$173,000"
+            delta="+8%"
+            positive
+          />
+        </div>
 
-      {/* Sidebar */}
-      <aside className="fixed top-20 left-0 bottom-0 w-60 p-4 overflow-y-auto bg-white/5 border-2 border-white/10 hidden md:block rounded-3xl">
-        <nav className="space-y-6 text-sm">
-          <div>
-            <div className="text-blue-200/80 mb-2 uppercase tracking-wide">
-              Pages
-            </div>
-            <ul className="space-y-1">
-              <li
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer ${activeView === "overview" ? "bg-blue-600/20 text-white" : "hover:bg-white/10 text-blue-100"}`}
-                onClick={() => setActiveView("overview")}
-              >
-                <FiHome /> Dashboard
-              </li>
-              <li className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/10 text-blue-100">
-                <FiTable /> Tables
-              </li>
-              <li className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/10 text-blue-100">
-                <FiCreditCard /> Billing
-              </li>
-              <li className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/10 text-blue-100">
-                <FiGlobe /> RTL
-              </li>
-            </ul>
-          </div>
-          <div>
-            <div className="text-blue-200/80 mb-2 uppercase tracking-wide">
-              Account Pages
-            </div>
-            <ul className="space-y-1">
-              <li className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/10 text-blue-100">
-                <FiUser /> Profile
-              </li>
-              <li
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer ${activeView === "users" ? "bg-blue-600/20 text-white" : "hover:bg-white/10 text-blue-100"}`}
-                onClick={() => setActiveView("users")}
-              >
-                <FiUser /> Users
-              </li>
-              <li className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/10 text-blue-100">
-                <FiLogIn /> Sign In
-              </li>
-              <li className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/10 text-blue-100">
-                <FiUserPlus /> Sign Up
-              </li>
-            </ul>
-          </div>
-        </nav>
-      </aside>
-
-      {/* Main grid */}
-      <main className="pt-20 md:pl-64 p-4 md:p-6 space-y-6">
-        {activeView === "users" ? (
-          <>
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => setActiveView("overview")}
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl border border-white/10"
-              >
-                ← Back to Dashboard
-              </button>
-            </div>
-            <Users embedded />
-          </>
-        ) : (
-          <>
-            {/* Stats row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              <StatCard
-                icon={FiCreditCard}
-                label="Today's Money"
-                value="$53,000"
-                delta="+55%"
-                positive
-              />
-              <StatCard
-                icon={FiGlobe}
-                label="Today's Users"
-                value="2,300"
-                delta="+5%"
-                positive
-              />
-              <StatCard
-                icon={FiUser}
-                label="New Clients"
-                value="+3,052"
-                delta="-14%"
-              />
-              <StatCard
-                icon={FiShoppingCart}
-                label="Total Sales"
-                value="$173,000"
-                delta="+8%"
-                positive
-              />
-            </div>
-
-            {/* Main cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Welcome */}
               <div className="col-span-1 lg:col-span-2 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-indigo-700/40 via-indigo-500/10 to-transparent rounded-3xl border border-white/10 overflow-hidden">
                 <div className="relative h-56 md:h-72">
@@ -230,7 +159,7 @@ const Dashboard = () => {
                   <div className="relative z-10 p-6">
                     <div className="text-blue-100 text-sm">Welcome back,</div>
                     <div className="text-white text-2xl md:text-3xl font-extrabold">
-                      Mark Johnson
+                      {user?.fullname || 'Admin'}
                     </div>
                     <p className="text-blue-100 mt-2 max-w-md">
                       Glad to see you again! Ask me anything.
@@ -330,8 +259,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-          </>
-        )}
+        
       </main>
     </div>
   );

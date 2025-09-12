@@ -1,37 +1,45 @@
 import React, { useState, useEffect, useRef } from "react";
 import api, { API_BASE_URL } from "../lib/api";
 import { useAuth } from "../../context/authcontext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FaPen, FaPlus, FaTrash, FaEye } from "react-icons/fa";
-import Dashboard from "./Dashboard";
+import { followUser, UnfollowUser } from "../lib/utilAip";
 export default function AccountPage() {
-  const { SetIsLoggedIn, user,handelLogout } = useAuth();
-  const userid = user?._id;
+  const { id } = useParams();
+  const { user, handelLogout } = useAuth();
   const navigate = useNavigate();
-  const [nName, setneName] = useState("");
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-  });
-  const [id, setid] = useState("");
+  // ✅ userid + anotheruser derived directly
+  const userid = id && id !== user?._id ? id : user?._id;
+  const anotheruser = id && id !== user?._id;
+
+  // State
+  const [following, setfollowing] = useState(false);
+  const [nName, setnName] = useState("");
+  const [formData, setFormData] = useState({ email: "" });
   const [saving, setSaving] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
-  const [profileImagePreview, setProfileImagePreview] =
-    useState("./assets/image.png");
-  
-  // Blog dashboard state
+  const [profileImagePreview, setProfileImagePreview] = useState("/assets/image.png");
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+
+  // Blogs
   const [userBlogs, setUserBlogs] = useState([]);
   const [loadingBlogs, setLoadingBlogs] = useState(false);
   const [deletingBlog, setDeletingBlog] = useState(null);
+  const [followLoading, setFollowLoading] = useState(false);
 
   const fileInputRef = useRef(null);
 
+  // Fetch user info
   useEffect(() => {
-    checkLogin();
-    // eslint-disable-next-line
-  }, []);
+    if (!userid) return; // don’t run until ready
+    if (!anotheruser) {
+      checkLogin();
+    }
+    handelgetuser(userid);
+  }, [userid]);
 
-
+  // Fetch blogs
   useEffect(() => {
     if (userid) {
       fetchUserBlogs();
@@ -41,18 +49,31 @@ export default function AccountPage() {
   const checkLogin = async () => {
     try {
       const res = await api.get("/auth/check");
-      const name = res.data.user.fullname;
-      const email = res.data.user.email;
-      const id = res.data.user._id;
-
-      setFormData({ name, email });
-      handelgetuser(email);
+      setnName(res.data.user.fullname);
+      setFormData({ email: res.data.user.email });
     } catch (error) {
       console.log(error);
     }
   };
+  //get user info
+  const handelgetuser = async (userid) => {
+    try {
+      const res = await api.get(`/user/getuser/${userid}`);
+      console.log("this is clevar", res);
+      setnName(res.data.user.fullname);
+      setfollowing(res.data.isFollowing);
+      setFollowersCount(res.data.followersCount);
+      setFollowingCount(res.data.followingCount);
+      setProfileImagePreview(
+        res.data.user.profileImgUrl
+          ? `${API_BASE_URL}${res.data.user.profileImgUrl}`
+          : "/assets/image.png"
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-  // Fetch user blogs
   const fetchUserBlogs = async () => {
     setLoadingBlogs(true);
     try {
@@ -67,15 +88,15 @@ export default function AccountPage() {
     }
   };
 
-  // Delete blog
   const handleDeleteBlog = async (blogId) => {
     if (window.confirm("Are you sure you want to delete this blog?")) {
       setDeletingBlog(blogId);
       try {
         const response = await api.delete(`/blog/delete/${blogId}`);
         if (response.data.success) {
-          // Remove the deleted blog from state
-          setUserBlogs(prevBlogs => prevBlogs.filter(blog => blog._id !== blogId));
+          setUserBlogs((prevBlogs) =>
+            prevBlogs.filter((blog) => blog._id !== blogId)
+          );
         }
       } catch (error) {
         console.log("Error deleting blog:", error);
@@ -85,60 +106,35 @@ export default function AccountPage() {
     }
   };
 
- 
   const handelsave = async () => {
     setSaving(true);
     try {
       // Update user info
-      await api.put(
-        "/user/update",
-        {
-          fullname: nName,
-          email: formData.email,
-        },
-        { }
-      );
+      await api.put("/user/update", {
+        fullname: nName,
+        email: formData.email,
+      });
 
-      // Only upload image if a new file is selected
+      // Upload profile image if new file selected
       if (profileImage) {
         const formdata = new FormData();
         formdata.append("image", profileImage);
-
-        await api.put(
-          `/profile/upload/${userid}`,
-          formdata
-        );
+        await api.put(`/profile/upload/${userid}`, formdata);
       }
     } catch (err) {
       console.log(err);
-      // Optionally show error message here
     } finally {
       setSaving(false);
     }
   };
-  // handelLogout();
-  // const handelLogout = async () => {
-  //   try {
-  //     const res = await axios.get("http://localhost:8000/user/logout", {
-  //       withCredentials: true,
-  //     });
-  //     if (res.data.success) {
-  //       SetIsLoggedIn(false);
-  //       navigate("/");
-  //     }
-  //   } catch (err) {
-  //     console.log("error is error", err);
-  //   }
-  // };
 
   const handleChange = (e) => {
-    setneName(e.target.value);
+    setnName(e.target.value);
   };
 
   const handleProfileImageChange = async (e) => {
     const file = e.target.files[0];
     setProfileImage(file);
-
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -154,237 +150,427 @@ export default function AccountPage() {
     }
   };
 
-  const handelgetuser = async (email) => {
-    try {
-      const newuser = await api.get("/user/getuser", {
-        params: { email },
-      });
-      setneName(newuser.data.user.fullname);
-     
-      setProfileImagePreview(`${API_BASE_URL}${newuser.data.user.profileImgUrl}`);
-      // 
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    // 
   };
+  const handelfollow = async (id) => {
+    try {
+      setFollowLoading(true);
+      const res = await followUser(id);
+      // refresh counts / status
+      await handelgetuser(userid);
+      
+      setfollowing(true);
+    } catch (err) {
+      console.error('Follow failed', err);
+    } finally {
+      setFollowLoading(false);
+    }
 
+  };
+  const unhandelfollow = async (id) => {
+    try {
+      setFollowLoading(true);
+      const res = await UnfollowUser(id);
+      await handelgetuser(userid);
+      setfollowing(false);
+    } catch (err) {
+      console.error('Unfollow failed', err);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
   return (
     <>
-    <div className="min-h-screen w-full pt-20 flex items-center justify-center flex-col px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
-      {/* Gls */}
-      <div
-        className="absolute top-0 left-0 w-96 h-96 bg-purple-500 opacity-30 rounded-full blur-3xl animate-pulse -z-10"
-        style={{ filter: "blur(120px)", left: "-10%", top: "-10%" }}
-      ></div>
-      <div
-        className="absolute bottom-0 right-0 w-96 h-96 bg-blue-400 opacity-30 rounded-full blur-3xl animate-pulse -z-10"
-        style={{ filter: "blur(120px)", right: "-10%", bottom: "-10%" }}
-      ></div>
-      <div className="w-full max-w-xl p-0">
+      <div className="min-h-screen w-full pt-20 pb-10 flex justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
+        {/* Ambient light effects */}
         <div
-          className="rounded-3xl shadow-2xl p-10 flex flex-col items-center backdrop-blur-xl border border-white/20 bg-white/10 animate-fade-in"
-          style={{
-            boxShadow:
-              "0 8px 32px 0 rgba(31, 38, 135, 0.37), 0 1.5px 4px 0 rgba(0,0,0,0.10)",
-            background:
-              "linear-gradient(120deg, rgba(255,255,255,0.10) 60%, rgba(46,142,255,0.10) 100%)",
-          }}
-        >
-          {/* Profile Image with Update Option */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative group">
-              <img
-                src={profileImagePreview}
-                alt="Profile"
-                className="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover"
-                style={{
-                  boxShadow:
-                    "0 0 0 6px rgba(46,142,255,0.25), 0 8px 32px 0 rgba(31,38,135,0.37)",
-                }}
-              />
-              {/* Update Profile Image Button */}
+          className="fixed top-0 left-0 w-96 h-96 bg-purple-500 opacity-30 rounded-full blur-3xl animate-pulse -z-10"
+          style={{ filter: "blur(120px)", left: "-10%", top: "-10%" }}
+        ></div>
+        <div
+          className="fixed bottom-0 right-0 w-96 h-96 bg-blue-400 opacity-30 rounded-full blur-3xl animate-pulse -z-10"
+          style={{ filter: "blur(120px)", right: "-10%", bottom: "-10%" }}
+        ></div>
 
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleProfileImageChange}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={triggerFileInput}
-                className="absolute bottom-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full shadow-lg text-xs font-semibold opacity-90 hover:opacity-100 transition-all duration-200 group-hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                style={{ fontSize: "0.75rem" }}
-              >
-                <FaPlus />
-              </button>
-            </div>
-
-            <h2 className="text-3xl font-extrabold text-white mt-6 tracking-tight drop-shadow-lg">
-              {nName || formData.name}
-            </h2>
-            <p className="text-lg text-blue-100 mt-1 font-mono tracking-wide">
-              {formData.email}
-            </p>
-          </div>
-
-          <form
-            onSubmit={handleSubmit}
-            className="w-full flex flex-col gap-6 mt-2"
-            autoComplete="off"
+        <div className="w-full max-w-5xl">
+          {/* Profile Header Section */}
+          <div
+            className="rounded-3xl shadow-2xl p-8 backdrop-blur-xl border border-white/20 bg-white/10 animate-fade-in mb-8"
+            style={{
+              boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+              background:
+                "linear-gradient(120deg, rgba(255,255,255,0.10) 60%, rgba(46,142,255,0.10) 100%)",
+            }}
           >
-            <div className="flex flex-col gap-2">
-              <label className="text-blue-200 font-semibold text-sm ml-1">
-                Name
-              </label>
-              <input
-                name="name"
-                type="text"
-                value={nName}
-                onChange={handleChange}
-                className="w-full px-5 py-3 rounded-2xl bg-white/30 text-white placeholder:text-blue-200 border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white/50 transition shadow-inner backdrop-blur-md"
-                placeholder="Enter your name"
-                spellCheck={false}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-blue-200 font-semibold text-sm ml-1">
-                Email
-              </label>
-              <input
-                name="email"
-                type="email"
-                value={formData.email}
-                disabled
-                className="w-full px-5 py-3 rounded-2xl bg-white/20 text-blue-100 border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white/40 transition shadow-inner backdrop-blur-md cursor-not-allowed"
-                placeholder="Email"
-                spellCheck={false}
-              />
-            </div>
-            <div className="flex gap-4 mt-4">
-              <button
-                type="button"
-                onClick={handelsave}
-                disabled={saving}
-                className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold shadow-lg hover:scale-105 hover:from-blue-600 hover:to-purple-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
-              <button
-                type="button"
-                onClick={handelLogout}
-                className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold shadow-lg hover:scale-105 hover:from-red-600 hover:to-pink-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
-              >
-                Log Out
-              </button>
-            </div>
-          { user.role==="Admin"&& <button
-                type="button"
-                onClick={() => navigate('/dashboard')}
-                className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#1643d9] to-pink-500 text-white font-bold shadow-lg hover:scale-105 hover:from-red-600 hover:to-pink-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
-              >
-               Go to Admin DashBoard
-              </button>}
-          </form>
-        </div>
-        
-        {/* Blog Dashboard */}
-        <div
-          className="mt-8 rounded-3xl shadow-2xl p-10 flex flex-col items-center backdrop-blur-xl border border-white/20 bg-white/10 animate-fade-in"
-          style={{
-            boxShadow:
-              "0 8px 32px 0 rgba(31, 38, 135, 0.37), 0 1.5px 4px 0 rgba(0,0,0,0.10)",
-            background:
-              "linear-gradient(120deg, rgba(255,255,255,0.10) 60%, rgba(46,142,255,0.10) 100%)",
-          }}
-        >
-          <h2 className="text-3xl font-extrabold text-white mb-6 tracking-tight drop-shadow-lg">
-            Blog Dashboard
-          </h2>
-          
-          {/* Blog Stats */}
-          <div className="w-full mb-8">
-            <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl p-6 border border-white/20">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-white mb-2">
-                  {loadingBlogs ? "..." : userBlogs.length}
-                </div>
-                <div className="text-blue-200 font-semibold">
-                  {userBlogs.length === 1 ? "Blog Posted" : "Blogs Posted"}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Blog List */}
-          <div className="w-full">
-            {loadingBlogs ? (
-              <div className="text-center text-blue-200">Loading blogs...</div>
-            ) : userBlogs.length === 0 ? (
-              <div className="text-center text-blue-200 py-8">
-                <div className="text-2xl mb-2">📝</div>
-                <div className="text-lg font-semibold">No blogs yet</div>
-                <div className="text-sm opacity-75">Start writing your first blog!</div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold text-white mb-4">Your Blogs</h3>
-                {userBlogs.map((blog) => (
-                  <div
-                    key={blog._id}
-                    className="bg-white/10 rounded-2xl p-4 border border-white/20 backdrop-blur-md hover:bg-white/15 transition-all duration-200"
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-16">
+              {/* Profile Image Section */}
+              <div className="relative group">
+                <img
+                  src={profileImagePreview}
+                  alt="Profile"
+                  className="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-white shadow-lg object-cover"
+                  style={{
+                    boxShadow:
+                      "0 0 0 6px rgba(46,142,255,0.25), 0 8px 32px 0 rgba(31,38,135,0.37)",
+                  }}
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleProfileImageChange}
+                  className="hidden"
+                />
+                {!anotheruser && (
+                  <button
+                    type="button"
+                    onClick={triggerFileInput}
+                    className="absolute bottom-2 right-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white p-2 rounded-full shadow-lg opacity-90 hover:opacity-100 transition-all duration-200 group-hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="text-white font-semibold text-lg mb-1">
-                          {blog.title}
-                        </h4>
-                        <p className="text-blue-200 text-sm mb-2 line-clamp-2">
-                          {blog.summary || blog.description.substring(0, 100)}...
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-blue-300">
-                          <span>Created: {new Date(blog.createdAt || Date.now()).toLocaleDateString()}</span>
-                          <span>Likes: {Array.isArray(blog.likedBy) ? blog.likedBy.length : 0}</span>
-                          <span>Comments: {Array.isArray(blog.comments) ? blog.comments.length : 0}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 ml-4">
+                    <FaPlus size={16} />
+                  </button>
+                )}
+              </div>
+
+              {/* Profile Info Section */}
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+                  <h2 className="text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
+                    {nName}
+                  </h2>
+                  <div className="flex gap-3">
+                    {!anotheruser ? (
+                      <>
                         <button
-                          onClick={() => navigate(`/blog/${blog._id}`)}
-                          className="p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 rounded-lg transition-all duration-200 hover:scale-105"
-                          title="View Blog"
+                          onClick={handelsave}
+                          disabled={saving}
+                          className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-sm shadow-lg hover:scale-105 transition-all duration-200"
                         >
-                          <FaEye size={16} />
+                          {saving ? "Saving..." : "Save Changes"}
                         </button>
                         <button
-                          onClick={() => handleDeleteBlog(blog._id)}
-                          disabled={deletingBlog === blog._id}
-                          className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50"
-                          title="Delete Blog"
+                          onClick={handelLogout}
+                          className="px-6 py-2 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold text-sm shadow-lg hover:scale-105 transition-all duration-200"
                         >
-                          {deletingBlog === blog._id ? (
-                            <div className="w-4 h-4 border-2 border-red-200 border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <FaTrash size={16} />
-                          )}
+                          Log Out
                         </button>
-                      </div>
+                      </>
+                    ) : (
+                      <>
+                        {following ? (
+                          <button
+                           onClick={() => unhandelfollow(userid)}
+                            disabled={followLoading}
+                            className={`px-6 py-2 rounded-lg bg-gradient-to-r from-[#ff4d4d] to-[#ff4d4d] text-white font-semibold text-sm shadow-lg transition-all duration-200 ${followLoading ? 'opacity-70 cursor-wait scale-100' : 'hover:scale-105'}`}
+                          >
+                            {followLoading ? (
+                              <div className="flex items-center justify-center space-x-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Unfollowing</span>
+                              </div>
+                            ) : (
+                              'Unfollow'
+                            )}
+                          </button>
+                        ) : (
+                          <button
+                           onClick={() => handelfollow(userid)}
+                            disabled={followLoading}
+                            className={`px-6 py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-sm shadow-lg transition-all duration-200 ${followLoading ? 'opacity-70 cursor-wait scale-100' : 'hover:scale-105'}`}
+                          >
+                            {followLoading ? (
+                              <div className="flex items-center justify-center space-x-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Following</span>
+                              </div>
+                            ) : (
+                              'Follow'
+                            )}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => console.log("Message clicked")}
+                          className="px-6 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold text-sm shadow-lg hover:scale-105 transition-all duration-200"
+                        >
+                          Message
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Primary Stats Section (Instagram-like) */}
+                <div className="flex items-center gap-8 mb-8 border-b border-white/10 pb-6">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-white mb-1">
+                      {userBlogs.length}
+                    </div>
+                    <div className="text-blue-200 text-sm font-medium tracking-wide">posts</div>
+                  </div>
+                  <button 
+                    className="text-center cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => {/* TODO: Show followers modal */}}
+                  >
+                    <div className="text-xl font-bold text-white mb-1">
+                      {followersCount}
+                    </div>
+                    <div className="text-blue-200 text-sm font-medium tracking-wide">followers</div>
+                  </button>
+                  <button 
+                    className="text-center cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => {/* TODO: Show following modal */}}
+                  >
+                    <div className="text-xl font-bold text-white mb-1">
+                      {followingCount}
+                    </div>
+                    <div className="text-blue-200 text-sm font-medium tracking-wide">following</div>
+                  </button>
+                </div>
+
+                {/* Engagement Stats Section */}
+                <div className="flex items-center gap-4 mb-4 px-2">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 18.828l-6.828-6.829a4 4 0 010-5.656z" />
+                    </svg>
+                    <div className="text-sm">
+                      <span className="font-bold text-white">
+                        {userBlogs.reduce(
+                          (total, blog) =>
+                            total +
+                            (Array.isArray(blog.likedBy)
+                              ? blog.likedBy.length
+                              : 0),
+                          0
+                        )}
+                      </span>
+                      <span className="text-blue-200 ml-1">total likes</span>
                     </div>
                   </div>
-                ))}
+                  <div className="w-px h-4 bg-white/10"></div>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <div className="text-sm">
+                      <span className="font-bold text-white">
+                        {userBlogs.reduce(
+                          (total, blog) =>
+                            total +
+                            (Array.isArray(blog.comments)
+                              ? blog.comments.length
+                              : 0),
+                          0
+                        )}
+                      </span>
+                      <span className="text-blue-200 ml-1">total comments</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-lg text-blue-100 font-mono tracking-wide mb-2">
+                  {formData.email}
+                </p>
+
+                {/* Dashboard access moved to sidebar for consistency */}
               </div>
+            </div>
+
+            {!anotheruser && user && (
+              <form
+                onSubmit={handleSubmit}
+                className="w-full mt-6"
+                autoComplete="off"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-blue-200 font-semibold text-sm ml-1">
+                      Name
+                    </label>
+                    <input
+                      name="name"
+                      type="text"
+                      value={nName}
+                      onChange={handleChange}
+                      className="w-full px-5 py-3 rounded-xl bg-white/30 text-white placeholder:text-blue-200 border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white/50 transition shadow-inner backdrop-blur-md"
+                      placeholder="Enter your name"
+                      spellCheck={false}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-blue-200 font-semibold text-sm ml-1">
+                      Email
+                    </label>
+                    <input
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      disabled
+                      className="w-full px-5 py-3 rounded-xl bg-white/20 text-blue-100 border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white/40 transition shadow-inner backdrop-blur-md cursor-not-allowed"
+                      placeholder="Email"
+                      spellCheck={false}
+                    />
+                  </div>
+                </div>
+              </form>
             )}
+          </div>
+
+          {/* Blog Grid Section */}
+          <div
+            className="rounded-3xl shadow-2xl p-8 backdrop-blur-xl border border-white/20 bg-white/10 animate-fade-in"
+            style={{
+              boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+              background:
+                "linear-gradient(120deg, rgba(255,255,255,0.10) 60%, rgba(46,142,255,0.10) 100%)",
+            }}
+          >
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-white">
+                {`${nName}'s`} Posts
+              </h2>
+              {!anotheruser && (
+                <button
+                  onClick={() => navigate("/add")}
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-sm shadow-lg hover:scale-105 transition-all duration-200"
+                >
+                  Create New Post
+                </button>
+              )}
+            </div>
+
+            {/* Blog Grid */}
+            <div className="w-full">
+              {loadingBlogs ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="bg-white/10 rounded-xl h-64 mb-4"></div>
+                      <div className="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-white/10 rounded w-1/2"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : userBlogs.length === 0 ? (
+                <div className="text-center py-16 bg-white/5 rounded-xl border border-white/10">
+                  <div className="text-6xl mb-4">📝</div>
+                  <div className="text-xl font-semibold text-white mb-2">
+                    No posts yet
+                  </div>
+                  <div className="text-blue-200 mb-6">
+                    Share your thoughts with the world!
+                  </div>
+                  {!anotheruser && (
+                    <button
+                      onClick={() => navigate("/add")}
+                      className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold shadow-lg hover:scale-105 transition-all duration-200"
+                    >
+                      Create Your First Post
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {userBlogs.map((blog) => (
+                    <div
+                      key={blog._id}
+                      className="group bg-white/10 rounded-xl border border-white/20 backdrop-blur-md overflow-hidden hover:bg-white/15 transition-all duration-300"
+                    >
+                      {/* Blog Image */}
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={
+                            blog.titalimg
+                              ? `${API_BASE_URL}${blog.titalimg}`
+                              : "/assets/image.png"
+                          }
+                          alt={blog.title}
+                          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        {/* Action buttons */}
+                        {!anotheruser && (
+                          <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button
+                              onClick={() => navigate(`/blog/${blog._id}`)}
+                              className="p-2 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 transition-colors"
+                              title="View Blog"
+                            >
+                              <FaEye size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBlog(blog._id)}
+                              disabled={deletingBlog === blog._id}
+                              className="p-2 bg-red-500 text-white rounded-lg shadow-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                              title="Delete Blog"
+                            >
+                              {deletingBlog === blog._id ? (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <FaTrash size={16} />
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {/* Blog Content */}
+                      <div className="p-4">
+                        <h4 className="text-white font-semibold text-lg mb-2 line-clamp-1">
+                          {blog.title}
+                        </h4>
+                        <p className="text-blue-200 text-sm mb-3 line-clamp-2">
+                          {blog.summary || blog.description.substring(0, 100)}
+                          ...
+                        </p>
+                        <div className="flex items-center justify-between text-xs text-blue-300">
+                          <span>
+                            {new Date(
+                              blog.createdAt || Date.now()
+                            ).toLocaleDateString()}
+                          </span>
+                          <div className="flex items-center gap-4">
+                            <span className="flex items-center gap-1">
+                              <svg
+                                className="w-4 h-4"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 18.828l-6.828-6.829a4 4 0 010-5.656z" />
+                              </svg>
+                              {Array.isArray(blog.likedBy)
+                                ? blog.likedBy.length
+                                : 0}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                />
+                              </svg>
+                              {Array.isArray(blog.comments)
+                                ? blog.comments.length
+                                : 0}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-  
-    </div>
     </>
   );
 }

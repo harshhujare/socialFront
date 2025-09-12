@@ -8,7 +8,7 @@ import { useAuth } from "../../context/authcontext";
 
 
 const Login = () => {
-const{SetIsLoggedIn}=useAuth();
+const{SetIsLoggedIn,login}=useAuth();
   const [Email, setEmail] = useState("");
   const [Password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,17 +27,7 @@ const{SetIsLoggedIn}=useAuth();
     }
  
     try {
-      const res = await api.post(
-        "/user/Login",
-        {
-          email: Email,
-          password: Password,
-        }
-      );
-      if (res.data.success) {
-        SetIsLoggedIn(true);
-        navigate("/");
-      }
+      const res = await login( Email, Password);
  
       setEmail("");
       setPassword("");

@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../lib/api";
 import { useAuth } from "../../context/authcontext";
 import { useNavigate } from "react-router-dom";
+import { hasPermission } from "../lib/permissions";
 
 const Add = () => {
   const [image, setImage] = useState(null);
@@ -16,6 +17,39 @@ const Add = () => {
   const userid = user?._id;
   const fullname = user?.fullname;
   const navigate = useNavigate();
+  const [hasAddBlogPermission, setHasAddBlogPermission] = useState(false);
+  const [permissionLoading, setPermissionLoading] = useState(true);
+
+  // Check if user has permission to add blog
+  useEffect(() => {
+    const checkPermission = async () => {
+      if (!user?.role) {
+        setHasAddBlogPermission(false);
+        setPermissionLoading(false);
+        return;
+      }
+
+      try {
+        const canAddBlog = await hasPermission(user.role, 'addBlog');
+        setHasAddBlogPermission(canAddBlog);
+        
+        if (!canAddBlog) {
+          setError("You don't have permission to add blogs");
+          setTimeout(() => {
+            navigate("/");
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Error checking permission:', error);
+        setHasAddBlogPermission(false);
+        setError("Error checking permissions");
+      } finally {
+        setPermissionLoading(false);
+      }
+    };
+
+    checkPermission();
+  }, [user?.role, navigate]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -108,6 +142,8 @@ const Add = () => {
         );
       } else if (err.response?.status === 401) {
         setError("Please login to add a blog");
+      } else if (err.response?.status === 403) {
+        setError("You don't have permission to add blogs");
       } else if (err.response?.status === 400) {
         setError("Invalid data. Please check your input.");
       } else { 
@@ -119,8 +155,34 @@ const Add = () => {
     }
   };
 
+  // Show loading while checking permissions
+  if (permissionLoading) {
+    return (
+      <div className="min-h-screen pt-20 w-full flex items-center justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-blue-200">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied if no permission
+  if (!hasAddBlogPermission) {
+    return (
+      <div className="min-h-screen pt-20 w-full flex items-center justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027]">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-400 mb-4">Access Denied</h2>
+          <p className="text-blue-200 mb-4">You don't have permission to add blogs.</p>
+          {error && <p className="text-red-300 mb-4">{error}</p>}
+          <p className="text-blue-300">Redirecting to home page...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen  pt-20 w-full flex items-center justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
+    <div className="min-h-screen pt-20 w-full flex items-center justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
       <div className="w-full max-w-lg p-0">
         <form
           onSubmit={handleSubmit}
@@ -225,7 +287,7 @@ const Add = () => {
     } 
     transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 mt-2`}
           >
-            {isUploading ? "Uploading..." : "Add Blog"}
+            {isUploading ? "Uploading..." : "Post"}
           </button>
         </form>
       </div>
