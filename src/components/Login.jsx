@@ -27,22 +27,24 @@ const{SetIsLoggedIn,login}=useAuth();
     }
  
     try {
-      const res = await login( Email, Password);
- 
-      setEmail("");
-      setPassword("");
-      setError("");
-    } catch (error) {
-      console.log(error);
-      const backendError = error?.response?.data;
- 
-      if (backendError?.message === "Wrong_Email_Password") {
-        setError("wrong email or password try again");
-      } else if (backendError?.message === "Validation_failed") {
-        setError("server error try again");
+      const res = await login(Email, Password);
+      
+      if (res.success) {
+        setEmail("");
+        setPassword("");
+        setError("");
       } else {
-        setError("something went wrong, please try again");
+        if (res.message === "Wrong_Email_Password") {
+          setError("Wrong email or password, please try again");
+        } else if (res.message === "Validation_failed") {
+          setError("Server validation error, please try again");
+        } else {
+          setError(res.message || "wron email or password");
+        }
       }
+    } catch (error) {
+      console.log("Unexpected error:", error);
+      setError("wrong email or password bro ! if you forgot then reach out the admin");
     } finally {
       setloggingin(false);
     }

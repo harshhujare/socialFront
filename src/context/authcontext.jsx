@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('token');
         if (token) {
           // Verify token with backend
-          const response = await api.get('/auth/verify');
+          const response = await api.get('/auth/check');
           if (response.data.success) {
             setUser(response.data.user);
             setIsLoggedIn(true);
@@ -54,31 +54,34 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/user/Login', { email, password });
       if (response.data.success) {
         const { token, user } = response.data;
         localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
         setUser(user);
         setIsLoggedIn(true);
         return { success: true };
       } else {
-        return { success: false, message: response.data.message };
+        return { success: false, message: response.data.message || 'Login failed' };
       }
     } catch (error) {
       console.error('Login error:', error);
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Login failed' 
+        message: error.response?.data?.message || 'Login failed',
+        error: error.response?.data || error.message
       };
     }
   };
 
   const register = async (userData) => {
     try {
-      const response = await api.post('/auth/register', userData);
+      const response = await api.post('/user/signup', userData);
       if (response.data.success) {
         const { token, user } = response.data;
         localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
         setUser(user);
         setIsLoggedIn(true);
         return { success: true };
@@ -94,10 +97,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const handelLogout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    setIsLoggedIn(false);
+  const handelLogout = async () => {
+    try {
+      await api.get('/user/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      setIsLoggedIn(false);
+    }
   };
 
   const updateUser = (updatedUser) => {

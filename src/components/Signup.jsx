@@ -7,17 +7,22 @@ import { useAuth } from "../../context/authcontext";
 const Signup = () => {
   const { SetIsLoggedIn, signup } = useAuth();
   const [Name, setName] = useState("");
+  const[loggingin,setloggingin]=useState(false);
   const [Email, setEmail] = useState("");
   const [Password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [showPass, setShowpass] = useState(false);
   const navigate = useNavigate();
 
   const handelsubmit = async (e) => {
+     setloggingin(true);
     e.preventDefault();
 
-    if (!Name || !Email || !Password || error) {
-      setError("invalid details, plese fill details properly");
+    // block submit when any validation error exists
+    if (!Name || !Email || !Password || error || emailError) {
+      setError(emailError || error || "Invalid details, please fill details properly");
+      setloggingin(false);
     } else {
       try {
         const res = await signup(Name, Email, Password);
@@ -33,22 +38,36 @@ const Signup = () => {
       } catch (error) {
         setError("Signup failed");
       }
+      finally {
+      setloggingin(false);
+    }
     }
   };
 
+  // Return a string describing the error or empty string if valid
   const validatePassword = (value) => {
-    if (value.length === 0) return setError("");
+    if (value.length === 0) return "";
     if (value.length < 4) return "Password must be at least 4 characters";
-    if (!/[A-Z]/.test(value)) return "Must include an uppercase letter";
-    if (!/[1-9]/.test(value)) return "Must include an Number";
+    if (!/[A-Z]/.test(value)) return "Password must include an uppercase letter";
+    if (!/[0-9]/.test(value)) return "Password must include a number";
     if (value.includes(" ")) return "Password must not contain spaces";
+    return "";
+  };
+
+  // Email format validation: ensures local@domain.tld with a valid TLD (2+ letters)
+  const validateEmail = (value) => {
+    if (!value) return "Email is required";
+    // local part: any non-space, non-@ chars; domain parts: alnum/hyphen; TLD: letters min 2
+    const re = /^[^\s@]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+    if (!re.test(value)) return "Enter a valid email (e.g. user@example.com)";
     return "";
   };
 
   const handelChange = (e) => {
     const value = e.target.value;
     setPassword(value);
-    setError(validatePassword(value));
+    const passErr = validatePassword(value);
+    setError(passErr);
   };
 
   return (
@@ -71,7 +90,11 @@ const Signup = () => {
           className="w-full px-4 my-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
           required
           onChange={(e) => {
-            setEmail(e.target.value);
+            const val = e.target.value;
+            setEmail(val);
+            setEmailError(validateEmail(val));
+            // clear global error if email now valid
+            if (emailError && !validateEmail(val)) setError("");
           }}
         />
         <div className="w-full flex justify-between my-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
@@ -90,15 +113,45 @@ const Signup = () => {
             {showPass ? <FaEyeSlash /> : <FaEye />}
           </span>
         </div>
-        {error && <p className="text-red-600">{error}</p>}
-        {!error && Password && <p className="text-green-600">valid password</p>}
+        {/* show email error first, then password/global error */}
+        {emailError && <p className="text-red-600">{emailError}</p>}
+        {!emailError && error && <p className="text-red-600">{error}</p>}
+        {!emailError && !error && Password && <p className="text-green-600">valid password</p>}
 
-        <button
+       <button
           type="submit"
           onClick={handelsubmit}
-          className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-md shadow-md transition"
+          disabled={loggingin}
+          className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-80 text-white font-semibold rounded-md shadow-md transition"
         >
-          Signup
+          {loggingin ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+              signing up...
+            </span>
+          ) : (
+            "signup"
+          )}
         </button>
         <div className=" mt-8 text-center">
           Alredy a user?{" "}
