@@ -4,6 +4,7 @@ import { useAuth } from "../../context/authcontext";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaPen, FaPlus, FaTrash, FaEye } from "react-icons/fa";
 import { followUser, UnfollowUser } from "../lib/utilAip";
+import AccountSkeleton from "./AccountSkeleton";
 export default function AccountPage() {
   const { id } = useParams();
   const { user, handelLogout } = useAuth();
@@ -28,6 +29,10 @@ export default function AccountPage() {
   const [deletingBlog, setDeletingBlog] = useState(null);
   const [followLoading, setFollowLoading] = useState(false);
 
+  // Loading states
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+
   const fileInputRef = useRef(null);
 
   // Fetch user info
@@ -46,6 +51,17 @@ export default function AccountPage() {
     }
   }, [userid]);
 
+  // Handle initial loading state
+  useEffect(() => {
+    if (userid && !loadingProfile && !loadingBlogs) {
+      // Add a small delay to better demonstrate the skeleton
+      const timer = setTimeout(() => {
+        setInitialLoading(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [userid, loadingProfile, loadingBlogs]);
+
   const checkLogin = async () => {
     try {
       const res = await api.get("/auth/check");
@@ -57,6 +73,7 @@ export default function AccountPage() {
   };
   //get user info
   const handelgetuser = async (userid) => {
+    setLoadingProfile(true);
     try {
       const res = await api.get(`/user/getuser/${userid}`);
       console.log("this is clevar", res);
@@ -71,6 +88,8 @@ export default function AccountPage() {
       );
     } catch (err) {
       console.log(err);
+    } finally {
+      setLoadingProfile(false);
     }
   };
 
@@ -180,6 +199,11 @@ export default function AccountPage() {
       setFollowLoading(false);
     }
   };
+  // Show skeleton while loading
+  if (initialLoading) {
+    return <AccountSkeleton />;
+  }
+
   return (
     <>
       <div className="min-h-screen w-full pt-20 pb-10 flex justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
@@ -236,9 +260,13 @@ export default function AccountPage() {
               {/* Profile Info Section */}
               <div className="flex-1 text-center md:text-left">
                 <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-                  <h2 className="text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
-                    {nName}
-                  </h2>
+                  {loadingProfile ? (
+                    <div className="h-8 bg-white/20 rounded-lg animate-pulse w-48 mx-auto md:mx-0"></div>
+                  ) : (
+                    <h2 className="text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
+                      {nName}
+                    </h2>
+                  )}
                   <div className="flex gap-3">
                     {!anotheruser ? (
                       <>
@@ -303,75 +331,122 @@ export default function AccountPage() {
                 {/* Primary Stats Section (Instagram-like) */}
                 <div className="flex items-center gap-8 mb-8 border-b border-white/10 pb-6">
                   <div className="text-center">
-                    <div className="text-xl font-bold text-white mb-1">
-                      {userBlogs.length}
-                    </div>
-                    <div className="text-blue-200 text-sm font-medium tracking-wide">posts</div>
+                    {loadingProfile ? (
+                      <>
+                        <div className="h-6 bg-white/20 rounded animate-pulse w-8 mb-1 mx-auto"></div>
+                        <div className="h-4 bg-white/15 rounded animate-pulse w-12 mx-auto"></div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-xl font-bold text-white mb-1">
+                          {userBlogs.length}
+                        </div>
+                        <div className="text-blue-200 text-sm font-medium tracking-wide">posts</div>
+                      </>
+                    )}
                   </div>
                   <button 
                     className="text-center cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => {/* TODO: Show followers modal */}}
                   >
-                    <div className="text-xl font-bold text-white mb-1">
-                      {followersCount}
-                    </div>
-                    <div className="text-blue-200 text-sm font-medium tracking-wide">followers</div>
+                    {loadingProfile ? (
+                      <>
+                        <div className="h-6 bg-white/20 rounded animate-pulse w-8 mb-1 mx-auto"></div>
+                        <div className="h-4 bg-white/15 rounded animate-pulse w-16 mx-auto"></div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-xl font-bold text-white mb-1">
+                          {followersCount}
+                        </div>
+                        <div className="text-blue-200 text-sm font-medium tracking-wide">followers</div>
+                      </>
+                    )}
                   </button>
                   <button 
                     className="text-center cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => {/* TODO: Show following modal */}}
                   >
-                    <div className="text-xl font-bold text-white mb-1">
-                      {followingCount}
-                    </div>
-                    <div className="text-blue-200 text-sm font-medium tracking-wide">following</div>
+                    {loadingProfile ? (
+                      <>
+                        <div className="h-6 bg-white/20 rounded animate-pulse w-8 mb-1 mx-auto"></div>
+                        <div className="h-4 bg-white/15 rounded animate-pulse w-16 mx-auto"></div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-xl font-bold text-white mb-1">
+                          {followingCount}
+                        </div>
+                        <div className="text-blue-200 text-sm font-medium tracking-wide">following</div>
+                      </>
+                    )}
                   </button>
                 </div>
 
                 {/* Engagement Stats Section */}
                 <div className="flex items-center gap-4 mb-4 px-2">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 18.828l-6.828-6.829a4 4 0 010-5.656z" />
-                    </svg>
-                    <div className="text-sm">
-                      <span className="font-bold text-white">
-                        {userBlogs.reduce(
-                          (total, blog) =>
-                            total +
-                            (Array.isArray(blog.likedBy)
-                              ? blog.likedBy.length
-                              : 0),
-                          0
-                        )}
-                      </span>
-                      <span className="text-blue-200 ml-1">total likes</span>
-                    </div>
-                  </div>
-                  <div className="w-px h-4 bg-white/10"></div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    <div className="text-sm">
-                      <span className="font-bold text-white">
-                        {userBlogs.reduce(
-                          (total, blog) =>
-                            total +
-                            (Array.isArray(blog.comments)
-                              ? blog.comments.length
-                              : 0),
-                          0
-                        )}
-                      </span>
-                      <span className="text-blue-200 ml-1">total comments</span>
-                    </div>
-                  </div>
+                  {loadingProfile ? (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-white/20 rounded animate-pulse"></div>
+                        <div className="h-4 bg-white/20 rounded animate-pulse w-20"></div>
+                      </div>
+                      <div className="w-px h-4 bg-white/10"></div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-white/20 rounded animate-pulse"></div>
+                        <div className="h-4 bg-white/20 rounded animate-pulse w-24"></div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 18.828l-6.828-6.829a4 4 0 010-5.656z" />
+                        </svg>
+                        <div className="text-sm">
+                          <span className="font-bold text-white">
+                            {userBlogs.reduce(
+                              (total, blog) =>
+                                total +
+                                (Array.isArray(blog.likedBy)
+                                  ? blog.likedBy.length
+                                  : 0),
+                              0
+                            )}
+                          </span>
+                          <span className="text-blue-200 ml-1">total likes</span>
+                        </div>
+                      </div>
+                      <div className="w-px h-4 bg-white/10"></div>
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <div className="text-sm">
+                          <span className="font-bold text-white">
+                            {userBlogs.reduce(
+                              (total, blog) =>
+                                total +
+                                (Array.isArray(blog.comments)
+                                  ? blog.comments.length
+                                  : 0),
+                              0
+                            )}
+                          </span>
+                          <span className="text-blue-200 ml-1">total comments</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                <p className="text-lg text-blue-100 font-mono tracking-wide mb-2">
-                  {formData.email}
-                </p>
+                {loadingProfile ? (
+                  <div className="h-6 bg-white/20 rounded animate-pulse w-64 mx-auto md:mx-0 mb-2"></div>
+                ) : (
+                  <p className="text-lg text-blue-100 font-mono tracking-wide mb-2">
+                    {formData.email}
+                  </p>
+                )}
 
                 {/* Dashboard access moved to sidebar for consistency */}
               </div>
@@ -444,11 +519,42 @@ export default function AccountPage() {
             <div className="w-full">
               {loadingBlogs ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="bg-white/10 rounded-xl h-64 mb-4"></div>
-                      <div className="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
-                      <div className="h-4 bg-white/10 rounded w-1/2"></div>
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div
+                      key={i}
+                      className="group bg-white/10 rounded-xl border border-white/20 backdrop-blur-md overflow-hidden"
+                    >
+                      {/* Blog Image Skeleton */}
+                      <div className="relative h-48 overflow-hidden">
+                        <div className="w-full h-full bg-white/20 animate-pulse"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        {/* Action buttons skeleton */}
+                        <div className="absolute bottom-4 right-4 flex gap-2">
+                          <div className="w-8 h-8 bg-white/20 rounded-lg animate-pulse"></div>
+                          <div className="w-8 h-8 bg-white/20 rounded-lg animate-pulse"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Blog Content Skeleton */}
+                      <div className="p-4">
+                        <div className="h-6 bg-white/20 rounded animate-pulse w-3/4 mb-2"></div>
+                        <div className="h-4 bg-white/15 rounded animate-pulse w-full mb-1"></div>
+                        <div className="h-4 bg-white/15 rounded animate-pulse w-2/3 mb-3"></div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="h-3 bg-white/15 rounded animate-pulse w-20"></div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1">
+                              <div className="w-4 h-4 bg-white/20 rounded animate-pulse"></div>
+                              <div className="h-3 bg-white/15 rounded animate-pulse w-4"></div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-4 h-4 bg-white/20 rounded animate-pulse"></div>
+                              <div className="h-3 bg-white/15 rounded animate-pulse w-4"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
