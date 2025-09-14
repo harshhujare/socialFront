@@ -158,7 +158,7 @@ const Add = () => {
   // Show loading while checking permissions
   if (permissionLoading) {
     return (
-      <div className="min-h-screen pt-20 w-full flex items-center justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027]">
+      <div className="min-h-screen  w-full flex items-center justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-blue-200">Checking permissions...</p>

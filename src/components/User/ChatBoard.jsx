@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../../lib/api';
 import { socket } from '../Socket';       
 import MessageBubble from './MessageBubble';
 // Helper function for formatting message time
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 
 
@@ -12,6 +13,8 @@ import MessageBubble from './MessageBubble';
 
 const ChatBoard = () => {
   const { user } = useAuth();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [mobileView, setMobileView] = useState('contacts'); // 'contacts' or 'chat'
   
 const [messages, setMessages] = useState([]);
   const [followers, setFollowers] = useState([]);
@@ -115,6 +118,22 @@ const [messages, setMessages] = useState([]);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+  
+  // Add touch event listeners for mobile devices
+  useEffect(() => {
+    const handleTouchStart = () => {
+      // Add any touch-specific behavior here
+      // For example, you might want to hide the keyboard on touch outside input
+      document.activeElement.blur();
+    };
+    
+    if (isMobile) {
+      document.addEventListener('touchstart', handleTouchStart);
+      return () => {
+        document.removeEventListener('touchstart', handleTouchStart);
+      };
+    }
+  }, [isMobile]);
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -219,6 +238,14 @@ const [messages, setMessages] = useState([]);
       handleSendMessage();
     }
   };
+  
+  // Handle touch scroll for mobile devices
+  const handleTouchScroll = () => {
+    // Add smooth scrolling behavior for touch devices
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const handleInputChange = (e) => {
     setMessageText(e.target.value);
@@ -279,14 +306,27 @@ const [messages, setMessages] = useState([]);
     );
   }
 
+  // Function to go back to contacts list on mobile
+  const handleBackToContacts = () => {
+    setMobileView('contacts');
+  };
+
+  // Function to handle user selection and view change on mobile
+  const handleMobileUserSelect = (userData) => {
+    handleUserSelect(userData);
+    if (isMobile) {
+      setMobileView('chat');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] ">
       <div className="flex h-[calc(100vh)]">
         {/* Left Sidebar - Users List */}
-        <div className="w-96 backdrop-blur-xl border-r border-white/10 shadow-2xl">
+        <div className={`${isMobile && mobileView === 'chat' ? 'hidden' : 'block'} ${isMobile ? 'w-full' : 'w-96'} backdrop-blur-xl border-r border-white/10 shadow-2xl`}>
           {/* Header */}
-          <div className="p-6 border-b border-white/10">
-            <h1 className="text-2xl font-bold text-white mb-4">Chats</h1>
+          <div className="p-4 md:p-6 border-b border-white/10">
+            <h1 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">Chats</h1>
             
             {/* Search Bar */}
             <div className="relative">
@@ -295,18 +335,18 @@ const [messages, setMessages] = useState([]);
                 placeholder="Search or start a new chat"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 pl-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:bg-white/15"
+                className="w-full px-3 md:px-4 py-2 md:py-3 pl-10 md:pl-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:bg-white/15 text-sm md:text-base"
               />
-              <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 w-4 md:w-5 h-4 md:h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
 
             {/* Tab Navigation */}
-            <div className="flex mt-4 space-x-2">
+            <div className="flex mt-3 md:mt-4 space-x-1 md:space-x-2">
               <button
                 onClick={() => setActiveTab('following')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium transition-all text-sm md:text-base ${
                   activeTab === 'following'
                     ? 'bg-purple-600 text-white'
                     : 'bg-white/10 text-white/80 hover:bg-white/20'
@@ -316,7 +356,7 @@ const [messages, setMessages] = useState([]);
               </button>
               <button
                 onClick={() => setActiveTab('followers')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium transition-all text-sm md:text-base ${
                   activeTab === 'followers'
                     ? 'bg-purple-600 text-white'
                     : 'bg-white/10 text-white/80 hover:bg-white/20'
@@ -328,7 +368,7 @@ const [messages, setMessages] = useState([]);
           </div>
 
                   {/* Users List */}
-        <div className="overflow-y-auto h-[calc(100vh-280px)]">
+        <div className="overflow-y-auto h-[calc(100vh-230px)] md:h-[calc(100vh-280px)]">
             {filteredUsers().map((userData, index) => {
               const user = activeTab === 'following' ? userData.following : userData.follower;
               const isSelected = selectedChat?._id === user._id;
@@ -336,28 +376,28 @@ const [messages, setMessages] = useState([]);
               return (
                 <div
                   key={user._id}
-                  onClick={() => handleUserSelect(userData)}
+                  onClick={() => handleMobileUserSelect(userData)}
                   className={`p-4 cursor-pointer transition-all duration-200 hover:bg-white/10 hover:shadow-lg ${
                     isSelected ? 'bg-purple-600/20 border-r-2 border-purple-500 shadow-lg' : ''
                   }`}
                 >
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 md:space-x-3">
                     <div className="relative">
                       <img
                         src={getProfileImage(user)}
                         alt={user.fullname}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
+                        className="w-10 md:w-12 h-10 md:h-12 rounded-full object-cover border-2 border-white/20"
                       />
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black animate-pulse"></div>
+                      <div className="absolute -bottom-1 -right-1 w-3 md:w-4 h-3 md:h-4 bg-green-500 rounded-full border-2 border-black animate-pulse"></div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-white font-medium truncate">{user.fullname}</h3>
-                        <span className="text-xs text-white/60">
+                        <h3 className="text-white font-medium truncate text-sm md:text-base">{user.fullname}</h3>
+                        <span className="text-[10px] md:text-xs text-white/60">
                           {formatTime(userData.createdAt)}
                         </span>
                       </div>
-                      <p className="text-white/70 text-sm truncate">{user.email}</p>
+                      <p className="text-white/70 text-xs md:text-sm truncate">{user.email}</p>
                     </div>
                   </div>
                 </div>
@@ -368,19 +408,19 @@ const [messages, setMessages] = useState([]);
               <div className="p-8 text-center text-white/60">
                 {searchQuery ? (
                   <div>
-                    <svg className="w-16 h-16 mx-auto mb-4 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-3 md:mb-4 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    <p className="text-lg font-medium">No users found</p>
-                    <p className="text-sm">Try a different search term</p>
+                    <p className="text-base md:text-lg font-medium">No users found</p>
+                    <p className="text-xs md:text-sm">Try a different search term</p>
                   </div>
                 ) : (
                   <div>
-                    <svg className="w-16 h-16 mx-auto mb-4 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-3 md:mb-4 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <p className="text-lg font-medium">No {activeTab} yet</p>
-                    <p className="text-sm">Start following users to see them here</p>
+                    <p className="text-base md:text-lg font-medium">No {activeTab} yet</p>
+                    <p className="text-xs md:text-sm">Start following users to see them here</p>
                   </div>
                 )}
               </div>
@@ -389,13 +429,23 @@ const [messages, setMessages] = useState([]);
         </div>
 
                  {/* Right Side - Chat Area */}
-         <div className="flex-1 bg-black/10 backdrop-blur-xl shadow-inner transition-all duration-300 relative">
+         <div className={`${isMobile && mobileView === 'contacts' ? 'hidden' : 'block'} flex-1 bg-black/10 backdrop-blur-xl shadow-inner transition-all duration-300 relative`}>
           {selectedChat ? (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-white/10  backdrop-blur-sm">
+              <div className="p-4 border-b border-white/10 backdrop-blur-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
+                    {isMobile && (
+                      <button 
+                        onClick={handleBackToContacts}
+                        className="mr-2 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all"
+                      >
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                    )}
                     <img
                       src={getProfileImage(selectedChat)}
                       alt={selectedChat.fullname}
@@ -411,25 +461,28 @@ const [messages, setMessages] = useState([]);
               </div>
 
                              {/* Chat Messages Area */}
-               <div className="flex-1 p-6 overflow-y-auto pb-24">
+               <div 
+                 className="flex-1 p-4 md:p-6 overflow-y-auto pb-24" 
+                 onTouchEnd={handleTouchScroll}
+               >
                 {/* Messages Container */}
                 {messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center text-white/60">
-                    <div className="w-24 h-24 mx-auto mb-6 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center">
-                      <svg className="w-12 h-12 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 md:mb-6 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <svg className="w-10 h-10 md:w-12 md:h-12 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">No messages yet</h3>
-                    <p className="text-sm opacity-80">Start your conversation with {selectedChat.fullname}</p>
+                    <h3 className="text-lg md:text-xl font-semibold mb-2">No messages yet</h3>
+                    <p className="text-xs md:text-sm opacity-80">Start your conversation with {selectedChat.fullname}</p>
                     
                     {/* System Messages */}
-                    <div className="mt-8 space-y-3">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 text-white/80 text-sm max-w-md text-center">
+                    <div className="mt-6 md:mt-8 space-y-2 md:space-y-3">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 md:px-4 py-2 text-white/80 text-xs md:text-sm max-w-[90%] md:max-w-md text-center mx-auto">
                         This is a secure chat with {selectedChat.fullname}. Messages are end-to-end encrypted.
                       </div>
                       
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 text-white/80 text-sm max-w-md text-center">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 md:px-4 py-2 text-white/80 text-xs md:text-sm max-w-[90%] md:max-w-md text-center mx-auto">
                         Start your conversation by typing a message below.
                       </div>
                     </div>
@@ -472,25 +525,33 @@ const [messages, setMessages] = useState([]);
                )}
 
                {/* Message Input */}
-               <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-black/20 backdrop-blur-sm">
-                <div className="flex items-center space-x-3">
-                  <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </button>
-                  <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828L18 9.828a2 2 0 002.828-2.828l-6.586-6.586a2 2 0 00-2.828 0L7 6.172a2 2 0 002.828 2.828z" />
-                    </svg>
-                  </button>
+               <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 border-t border-white/10 bg-black/20 backdrop-blur-sm">
+                <div className="flex items-center space-x-2 md:space-x-3">
+                  {!isMobile && (
+                    <>
+                      <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                      <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828L18 9.828a2 2 0 002.828-2.828l-6.586-6.586a2 2 0 00-2.828 0L7 6.172a2 2 0 002.828 2.828z" />
+                        </svg>
+                      </button>
+                    </>  
+                  )}
                                      <input
                      type="text"
                      placeholder="Type a message"
                      value={messageText}
                      onChange={handleInputChange}
                      onKeyPress={handleKeyPress}
-                     className="flex-1 px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                     className="flex-1 px-3 md:px-4 py-2 md:py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm md:text-base"
+                     autoComplete="off"
+                     autoCorrect="on"
+                     spellCheck="true"
+                     enterKeyHint="send"
                    />
                   <button 
                     onClick={handleSendMessage}
@@ -501,11 +562,13 @@ const [messages, setMessages] = useState([]);
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                   </button>
-                  <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                    </svg>
-                  </button>
+                  {!isMobile && (
+                    <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
             </>
@@ -513,13 +576,13 @@ const [messages, setMessages] = useState([]);
             /* Welcome Screen */
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center text-white/60">
-                <div className="w-24 h-24 mx-auto mb-6 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <svg className="w-12 h-12 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 md:mb-6 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 md:w-12 md:h-12 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-semibold mb-2">Welcome to Chat</h2>
-                <p className="text-lg">Select a user from the left to start chatting</p>
+                <h2 className="text-xl md:text-2xl font-semibold mb-2">Welcome to Chat</h2>
+                <p className="text-base md:text-lg">{isMobile ? 'Select a user to start chatting' : 'Select a user from the left to start chatting'}</p>
               </div>
             </div>
           )}

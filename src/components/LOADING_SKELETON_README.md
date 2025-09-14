@@ -90,3 +90,6 @@ To modify the skeleton appearance:
 - Modern browsers with CSS3 support
 - Tailwind CSS classes for responsive design
 - CSS animations with fallbacks for older browsers
+
+
+

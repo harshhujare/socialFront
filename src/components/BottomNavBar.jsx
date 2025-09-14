@@ -8,7 +8,8 @@ import {
   FiPlusSquare, 
   FiMessageCircle, 
   FiUser, 
-  FiSettings
+  FiSettings,
+  FiLogIn
 } from 'react-icons/fi';
 
 const BottomNavBar = () => {
@@ -90,6 +91,10 @@ const BottomNavBar = () => {
         {IsLoggedIn && <NavItem to={`/Account/${user?._id}`} icon={FiUser} />}
         {IsLoggedIn && (user?.role === "ADMIN" || user?.role === "APPROVER") && (
           <NavItem to="/dashboard" icon={FiSettings} />
+        )}
+        {/* Show Login option when user is not logged in */}
+        {!IsLoggedIn && (
+          <NavItem to="/Login" icon={FiLogIn} condition={!IsLoggedIn} />
         )}
       </div>
     </div>

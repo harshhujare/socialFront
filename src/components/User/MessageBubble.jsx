@@ -9,9 +9,14 @@ const MessageBubble = ({  message, isOwnMessage, senderName }) => {
         hour12: true 
       });
     };
+    
+    // Detect touch device
+    const isTouchDevice = () => {
+      return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    };
   return (
-    <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-3`}>
-         <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-lg ${
+    <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-2 md:mb-3`}>
+         <div className={`max-w-[75%] md:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-lg shadow-lg ${
            isOwnMessage 
              ? 'bg-purple-600 text-white rounded-br-none' 
              : 'bg-white/10 backdrop-blur-sm text-white rounded-bl-none border border-white/20'
@@ -28,7 +33,7 @@ const MessageBubble = ({  message, isOwnMessage, senderName }) => {
                </p>
              </div>
              <div className="flex items-center space-x-1">
-               <span className={`text-xs opacity-60 ${isOwnMessage ? 'text-purple-100' : 'text-white/60'}`}>
+               <span className={`text-[10px] md:text-xs opacity-60 ${isOwnMessage ? 'text-purple-100' : 'text-white/60'}`}>
                  {formatMessageTime(message.createdAt)}
                </span>
                {isOwnMessage && (
