@@ -13,7 +13,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-export const API_BASE_URL = api.defaults.baseURL || '';
+export const API_BASE_URL = api.defaults.baseURL || '  ';
 
 export default api;
 

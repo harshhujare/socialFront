@@ -3,12 +3,15 @@ import api from "../lib/api";
 import { useAuth } from "../../context/authcontext";
 import { useNavigate } from "react-router-dom";
 import { hasPermission } from "../lib/permissions";
-
+import { useMediaQuery } from '../hooks/useMediaQuery';
+import BackButton from "./buttons/BackButton";
 const Add = () => {
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [title, setTitle] = useState("");
+    const isMobile = useMediaQuery('(max-width: 768px)');
+  
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -182,8 +185,11 @@ const Add = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 w-full flex items-center justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
+    <div className="min-h-screen  w-full flex items-center justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
+   
       <div className="w-full max-w-lg p-0">
+                    {isMobile&& <BackButton/>}
+
         <form
           onSubmit={handleSubmit}
           className="rounded-3xl shadow-2xl p-10 flex flex-col items-center backdrop-blur-xl border border-white/20 bg-white/10 animate-fade-in gap-8"
@@ -194,6 +200,7 @@ const Add = () => {
               "linear-gradient(120deg, rgba(255,255,255,0.10) 60%, rgba(46,142,255,0.10) 100%)",
           }}
         >
+            
           {/* Ima ge Upload */}
           <div className="flex flex-col items-center w-full gap-2">
             <label className="text-blue-200 font-semibold text-sm mb-1">

@@ -287,6 +287,7 @@ const BlogDetail = () => {
    
     navigate(`/Account/${blog.userid}`);
   };
+
   // Loading state
   if (loading) {
     return (
@@ -403,6 +404,7 @@ const BlogDetail = () => {
               
               <img
                 src={blog.titalimg ? `${API_BASE_URL}${blog.titalimg}` : '/assets/image.png'}
+                
                 alt={blog.title}
                 className={`object-cover w-full h-full transition-opacity duration-500 ${
                   imageLoading ? 'opacity-0' : 'opacity-100'
@@ -410,7 +412,7 @@ const BlogDetail = () => {
                 onLoad={handleImageLoad}
                 onError={handleImageError}
               />
-              
+          
               {/* Fallback for image error */}
               {imageError && (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-800">

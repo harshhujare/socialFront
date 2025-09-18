@@ -5,6 +5,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FaPen, FaPlus, FaTrash, FaEye } from "react-icons/fa";
 import { followUser, UnfollowUser } from "../lib/utilAip";
 import AccountSkeleton from "./AccountSkeleton";
+import { useMediaQuery } from '../hooks/useMediaQuery';
+import BackButton from './buttons/BackButton.jsx';
 export default function AccountPage() {
   const { id } = useParams();
   const { user, handelLogout } = useAuth();
@@ -12,8 +14,7 @@ export default function AccountPage() {
   // ✅ userid + anotheruser derived directly
   const userid = id && id !== user?._id ? id : user?._id;
   const anotheruser = id && id !== user?._id;
-
-  // State
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [following, setfollowing] = useState(false);
   const [nName, setnName] = useState("");
   const [formData, setFormData] = useState({ email: "" });
@@ -208,6 +209,7 @@ export default function AccountPage() {
     <>
       <div className="min-h-screen w-full pt-0 pb-10 flex justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
         {/* Ambient light effects */}
+
         <div
           className="fixed top-0 left-0 w-96 h-96 bg-purple-500 opacity-30 rounded-full blur-3xl animate-pulse -z-10"
           style={{ filter: "blur(120px)", left: "-10%", top: "-10%" }}
@@ -218,6 +220,7 @@ export default function AccountPage() {
         ></div>
 
         <div className="w-full max-w-5xl">
+         
           {/* Profile Header Section */}
           <div
             className="rounded-3xl shadow-2xl p-8 backdrop-blur-xl border border-white/20 bg-white/10 animate-fade-in mb-8"
@@ -227,6 +230,7 @@ export default function AccountPage() {
                 "linear-gradient(120deg, rgba(255,255,255,0.10) 60%, rgba(46,142,255,0.10) 100%)",
             }}
           >
+             {isMobile&& <BackButton/>}
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-16">
               {/* Profile Image Section */}
               <div className="relative group">
