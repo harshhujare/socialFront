@@ -18,6 +18,8 @@ const Hero = () => {
       const res = await api.get("/blog/getblog", {
         params: { search, page, limit: 9 }
       });
+      // console.log(res.data.blogs);
+
       setBlogs(res.data.blogs || []);
       setPages(res.data?.pagination?.pages || 1);
       setTotal(res.data?.pagination?.total || 0);
@@ -72,7 +74,8 @@ const Hero = () => {
                     <Card
                       id={blog._id}
                       title={blog.title}
-                       titalimg={`${ASSET_BASE}${blog.titalimg}`}
+                      
+                       titalimg={blog.titalimg}
                       createdby={blog.createdby}
                       createdAt={blog.createdAt}
                       summary={blog.summary}

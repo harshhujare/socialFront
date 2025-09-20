@@ -160,7 +160,7 @@ const [messages, setMessages] = useState([]);
 
   const getProfileImage = (userData) => {
     if (userData.profileImgUrl && userData.profileImgUrl !== '/public/uploads/profile/image.png') {
-      return `${API_BASE_URL}${userData.profileImgUrl}`;
+      return `${userData.profileImgUrl}`;
     }
     // Return a fallback avatar using a data URL or default image
     return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2Q3I3M0QiLz4KPHBhdGggZD0iTTIwIDEwQzIyLjA3NjEgMTAgMjQgMTEuOTIzOSAyNCAxNEMyNCAxNi4wNzYxIDIyLjA3NjEgMTggMjAgMThDMTcuOTIzOSAxOCAxNiAxNi4wNzYxIDE2IDE0QzE2IDExLjkyMzkgMTcuOTIzOSAxMCAyMCAxMFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0yNiAyNkMyNiAyOS4zMTM3IDIzLjMxMzcgMzIgMjAgMzJDMTYuNjg2MyAzMiAxNCAyOS4zMTM3IDE0IDI2QzE0IDIyLjY4NjMgMTYuNjg2MyAyMCAyMCAyMEMyMy4zMTM3IDIwIDI2IDIyLjY4NjMgMjYgMjZaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K';
@@ -397,7 +397,7 @@ const [messages, setMessages] = useState([]);
                           {formatTime(userData.createdAt)}
                         </span>
                       </div>
-                      <p className="text-white/70 text-xs md:text-sm truncate">{user.email}</p>
+                     
                     </div>
                   </div>
                 </div>

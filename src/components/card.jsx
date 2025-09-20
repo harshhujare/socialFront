@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Card = ({ id, title, titalimg, summary, createdby, createdAt, likes = 0, comments = 0 }) => {
+  // console.log("tit",titalimg)
   const navigate = useNavigate();
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -44,7 +45,7 @@ const Card = ({ id, title, titalimg, summary, createdby, createdAt, likes = 0, c
 
         {/* Image */}
         <img
-          src={titalimg || './assets/image.png'}
+          src={`${titalimg}`|| './assets/image.png'}
           alt={title}
           className={`object-cover w-full h-full transition duration-500 ${imageLoading ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}
           onLoad={handleImageLoad}

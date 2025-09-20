@@ -77,14 +77,14 @@ export default function AccountPage() {
     setLoadingProfile(true);
     try {
       const res = await api.get(`/user/getuser/${userid}`);
-      console.log("this is clevar", res);
+      // console.log("this is clevar", res.data.user);
       setnName(res.data.user.fullname);
       setfollowing(res.data.isFollowing);
       setFollowersCount(res.data.followersCount);
       setFollowingCount(res.data.followingCount);
       setProfileImagePreview(
         res.data.user.profileImgUrl
-          ? `${API_BASE_URL}${res.data.user.profileImgUrl}`
+          ? `${res.data.user.profileImgUrl}`
           : "/assets/image.png"
       );
     } catch (err) {
@@ -98,6 +98,7 @@ export default function AccountPage() {
     setLoadingBlogs(true);
     try {
       const response = await api.get(`/blog/user/${userid}`);
+      // console.log("these are itsms", response.data.blogs);
       if (response.data.success) {
         setUserBlogs(response.data.blogs);
       }
@@ -592,7 +593,7 @@ export default function AccountPage() {
                         <img
                           src={
                             blog.titalimg
-                              ? `${API_BASE_URL}${blog.titalimg}`
+                              ? `${blog.titalimg}`
                               : "/assets/image.png"
                           }
                           alt={blog.title}

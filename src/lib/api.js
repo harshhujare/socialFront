@@ -3,7 +3,7 @@ import axios from 'axios';
 // Use explicit env when provided, otherwise default to local backend
 const inferLocalBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  console.log("API Base URL in prod:", envUrl);
+  // console.log("API Base URL in prod:", envUrl);
   if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) return envUrl;
   return 'http://localhost:8000';
 };

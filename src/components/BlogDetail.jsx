@@ -84,18 +84,21 @@ const BlogDetail = () => {
         setLoading(true);
         setError(null);
         const res = await api.get(`/blog/getblog/${id}`);
+        // console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",res.data)
         const b = res.data.blog;
         setBlog(b);
         const likedBy = Array.isArray(b?.likedBy) ? b.likedBy : [];
         setLikesCount(likedBy.length);
         setLiked(IsLoggedIn && likedBy.some(uid => String(uid) === String(user?._id)));
         setComments(Array.isArray(b?.comments) ? b.comments : []);
+       
       } catch (err) {
         console.error('Error fetching blog:', err);
         setError(err.response?.data?.message || 'Failed to load blog details. Please try again later.');
       } finally {
         setLoading(false);
       }
+      
     };
     fetchBlog();
   }, [id, IsLoggedIn, user?._id]);
@@ -403,7 +406,7 @@ const BlogDetail = () => {
               )}
               
               <img
-                src={blog.titalimg ? `${API_BASE_URL}${blog.titalimg}` : '/assets/image.png'}
+                src={blog.titalimg ? `${blog.titalimg}` : '/assets/image.png'}
                 
                 alt={blog.title}
                 className={`object-cover w-full h-full transition-opacity duration-500 ${
@@ -596,4 +599,4 @@ const BlogDetail = () => {
   );
 };
 
-export default BlogDetail; 
+export default BlogDetail;

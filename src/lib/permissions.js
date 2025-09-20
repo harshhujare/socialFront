@@ -45,7 +45,7 @@ export const getPermissions = async (userRole = null) => {
 // Check if user has specific permission
 export const hasPermission = async (userRole, permission) => {
   try {
-    console.log('hasPermission called with:', { userRole, permission });
+    // console.log('hasPermission called with:', { userRole, permission });
    
     const permissions = await getPermissions(userRole);
    // console.log('Fetched permissions:', permissions);
@@ -53,12 +53,12 @@ export const hasPermission = async (userRole, permission) => {
    // console.log('Found role permission:', rolePermission);
 
     if (!rolePermission) {
-      console.log('No role permission found for role:', userRole);
+      // console.log('No role permission found for role:', userRole);
       return false;
     }
 
     const hasPerm = rolePermission.permissions[permission] || false;
-    console.log(`Permission ${permission} for role ${userRole}:`, hasPerm);
+    // console.log(`Permission ${permission} for role ${userRole}:`, hasPerm);
     return hasPerm;
   } catch (error) {
     console.error('Error checking permission:', error);

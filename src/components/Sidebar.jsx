@@ -112,7 +112,7 @@ const Sidebar = () => {
               <Link to={`/Account/${user?._id}`} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/10">
                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center overflow-hidden">
                   {user.profileImgUrl ? (
-                    <img src={`${API_BASE_URL}${user.profileImgUrl}`} alt={user.fullname} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/image.png'; }} />
+                    <img src={`${user.profileImgUrl}`} alt={user.fullname} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/image.png'; }} />
                   ) : (
                     <span className="text-white text-sm">{user.fullname?.charAt(0)}</span>
                   )}
