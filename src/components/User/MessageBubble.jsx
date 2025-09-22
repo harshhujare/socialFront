@@ -23,11 +23,7 @@ const MessageBubble = ({  message, isOwnMessage, senderName }) => {
          }`}>
            <div className="flex items-end space-x-2">
              <div className="flex-1">
-               {!isOwnMessage && (
-                 <p className="text-sm font-medium mb-1 opacity-80">
-                   {senderName}
-                 </p>
-               )}
+              
                <p className="text-sm leading-relaxed break-words">
                  {message.content}
                </p>
