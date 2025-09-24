@@ -1,11 +1,15 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 // axios usage moved into auth context via api client
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/authcontext";
 const Signup = () => {
-  const { SetIsLoggedIn, signup } = useAuth();
+
+  const {IsLoggedIn, SetIsLoggedIn, signup } = useAuth();
+  if(IsLoggedIn){
+    return <Navigate to="/" />
+  }
   const [Name, setName] = useState("");
   const[loggingin,setloggingin]=useState(false);
   const [Email, setEmail] = useState("");

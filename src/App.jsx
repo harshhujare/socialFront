@@ -14,8 +14,8 @@ import AdminLayout from "./components/Admin/AdminLayout";
 import ChatBoard from "./components/User/ChatBoard";
 import DebugPermissions from "./components/DebugPermissions";
 import { AuthProvider } from "../context/authcontext";
-import { useAuth } from "../context/authcontext";
 
+import Protected from "./Protected";
 import { BrowserRouter, Route, Router, Link, Routes } from "react-router-dom";
 
 const App = () => {
@@ -25,19 +25,24 @@ const App = () => {
       <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Layout><Hero /></Layout>} />
+           <Route path="/Signup" element={<Layout>  <Signup />  </Layout>} />
+          <Route path="/Login" element={<Layout><Login />  </Layout>} />
+                    <Route path="/" element={<Layout><Hero /></Layout>} />
+          <Route element={<Protected/>}>
+
           <Route path="/dashboard" element={<AdminLayout><Dashboard /></AdminLayout>} />
           <Route path="/users" element={<AdminLayout><Users /></AdminLayout>} />
           <Route path="/dashboard/approvals" element={<AdminLayout><Approvels /></AdminLayout>} />
           <Route path="/dashboard/permissions" element={<AdminLayout><Permissions /></AdminLayout>} />
           <Route path="/dashboard/users" element={<AdminLayout><Users /></AdminLayout>} />
           <Route path="/Add" element={<Layout><Add /></Layout>} />
-          <Route path="/Signup" element={<Layout><Signup /></Layout>} />
-          <Route path="/Login" element={<Layout><Login /></Layout>} />
+         
           <Route path="/Account/:id" element={<Layout><Account /></Layout>} />
           <Route path="/blog/:id" element={<Layout><BlogDetail /></Layout>} />
           <Route path="/chat" element={<Layout><ChatBoard /></Layout>} />
           <Route path="/debug" element={<Layout><DebugPermissions /></Layout>} />
+          </Route>
+         
         </Routes>
         </AuthProvider>
       </BrowserRouter>

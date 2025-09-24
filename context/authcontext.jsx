@@ -64,6 +64,7 @@ const [Socket, setSocket] = useState(null)
 //=================//
    const login = async (email, password) => {
     try {
+      console.log("context",IsLoggedIn)
       const res = await api.post(
         "/user/Login",
         {

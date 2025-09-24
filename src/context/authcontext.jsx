@@ -54,14 +54,18 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+         
       const response = await api.post('/user/Login', { email, password });
       if (response.data.success) {
         const { token, user } = response.data;
+        console.log(token,"from context");
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
         setUser(user);
         setIsLoggedIn(true);
+     
         return { success: true };
+        
       } else {
         return { success: false, message: response.data.message || 'Login failed' };
       }

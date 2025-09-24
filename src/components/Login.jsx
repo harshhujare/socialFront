@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate ,Navigate } from "react-router-dom";
 import api from "../lib/api";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -8,7 +8,10 @@ import { useAuth } from "../../context/authcontext";
 
 
 const Login = () => {
-const{SetIsLoggedIn,login}=useAuth();
+const{SetIsLoggedIn,login,IsLoggedIn}=useAuth();
+ if(IsLoggedIn){
+    return <Navigate to="/" />
+  }
   const [Email, setEmail] = useState("");
   const [Password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -29,7 +32,7 @@ const{SetIsLoggedIn,login}=useAuth();
     try {
       const res = await login(Email, Password);
       
-      if (res.success) {
+      if (res.data.success) {
         setEmail("");
         setPassword("");
         setError("");
