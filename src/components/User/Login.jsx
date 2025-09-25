@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate ,Navigate } from "react-router-dom";
-import api from "../lib/api";
+import api from "../../lib/api";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/authcontext"; 
+import { useAuth } from "../../../context/authcontext"; 
 
 
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/authcontext';
-import MobileMenu from '../MobileMenu';
+import MobileMenu from '../UI/MobileMenu';
 import {
   FiHome,
   FiTable,

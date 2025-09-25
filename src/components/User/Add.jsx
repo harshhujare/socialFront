@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import api from "../lib/api";
-import { useAuth } from "../../context/authcontext";
+import api from "../../lib/api";
+import { useAuth } from "../../../context/authcontext";
 import { useNavigate } from "react-router-dom";
-import { hasPermission } from "../lib/permissions";
-import { useMediaQuery } from '../hooks/useMediaQuery';
-import BackButton from "./buttons/BackButton";
+import { hasPermission } from "../../lib/permissions";
+import { useMediaQuery } from '../../hooks/useMediaQuery';
+import BackButton from "../buttons/BackButton";
 const Add = () => {
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");

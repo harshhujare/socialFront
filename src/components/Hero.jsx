@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import api from '../lib/api'
-import Card from './card'
+import Card from './UI/card'
 import { API_BASE_URL } from '../lib/api';
 const ASSET_BASE = API_BASE_URL;
 

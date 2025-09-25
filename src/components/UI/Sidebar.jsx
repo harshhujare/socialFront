@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../context/authcontext";
-import { hasPermission } from "../lib/permissions";
+import { useAuth } from "../../../context/authcontext";
+import { hasPermission } from "../../lib/permissions";
 import MobileMenu from "./MobileMenu";
 import BottomNavBar from "./BottomNavBar";
-import { API_BASE_URL } from "../lib/api";
+import { API_BASE_URL } from "../../lib/api";
 import { 
   FiHome, 
   FiSearch, 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/authcontext';
-import { hasPermission } from '../lib/permissions';
+import { useAuth } from '../../../context/authcontext';
+import { hasPermission } from '../../lib/permissions';
 import { 
   FiHome, 
   FiSearch, 

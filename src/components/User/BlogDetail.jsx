@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api, { API_BASE_URL } from '../lib/api';
-import { useAuth } from '../../context/authcontext';
-import { hasPermission } from '../lib/permissions';
+import api, { API_BASE_URL } from '../../lib/api';
+import { useAuth } from '../../../context/authcontext';
+import { hasPermission } from '../../lib/permissions';
 
 function stringToColor(str) {
   let hash = 0;
@@ -84,7 +84,7 @@ const BlogDetail = () => {
         setLoading(true);
         setError(null);
         const res = await api.get(`/blog/getblog/${id}`);
-        // console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",res.data)
+        // console.log("aaaa",res.data)
         const b = res.data.blog;
         setBlog(b);
         const likedBy = Array.isArray(b?.likedBy) ? b.likedBy : [];

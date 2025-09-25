@@ -52,7 +52,7 @@ const Card = ({ id, title, titalimg, summary, createdby, createdAt, likes = 0, c
           onError={handleImageError}
         />
 
-        {/* Fallback for image error */}
+      
         {imageError && (
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
             <div className="text-gray-400 text-center">

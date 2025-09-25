@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 // axios usage moved into auth context via api client
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/authcontext";
+import { useAuth } from "../../../context/authcontext";
 const Signup = () => {
 
   const {IsLoggedIn, SetIsLoggedIn, signup } = useAuth();
