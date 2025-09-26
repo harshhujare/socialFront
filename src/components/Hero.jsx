@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import api from '../lib/api'
 import Card from './UI/card'
+import Cardskeleton from './UI/Skeletons/Cardskeleton'
 import { API_BASE_URL } from '../lib/api';
 const ASSET_BASE = API_BASE_URL;
 
@@ -62,7 +63,12 @@ const Hero = () => {
       {/* Blog Cards Grid */}
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 pb-16">
         {loading ? (
-          <div className="text-center text-white">Loading...</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-items-center">
+            <Cardskeleton />
+            <Cardskeleton />
+            <Cardskeleton />
+            <Cardskeleton />
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-items-center animate-fade-in-slow">

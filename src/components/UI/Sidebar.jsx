@@ -20,7 +20,7 @@ const Sidebar = () => {
   const location = useLocation();
   const { IsLoggedIn = false, user = null, handelLogout = () => {}, loading = false } = useAuth() || {};
   const [canAddBlog, setCanAddBlog] = useState(false);
-
+  const [IsChatOpen, setIsChatOpen] = useState(false);
   // Don't render until auth context is loaded
   if (loading) {
     return null;
@@ -53,7 +53,11 @@ const Sidebar = () => {
 
   const NavLink = ({ to, icon: Icon, label, condition = true }) => {
     if (!condition) return null;
-    
+    if(to==="/chat"){
+      setIsChatOpen(true);
+    }else{
+      setIsChatOpen(false);
+    }
     return (
       <Link 
         to={to} 

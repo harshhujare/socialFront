@@ -4,6 +4,7 @@ import { getFollowers, getFollowing } from '../../lib/utilAip';
 import { API_BASE_URL } from '../../lib/api';
 import { socket } from '../Socket';       
 import MessageBubble from './MessageBubble';
+import Skeliton from '../UI/Skeletons/Skeliton';
 // Helper function for formatting message time
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
@@ -300,9 +301,9 @@ const [messages, setMessages] = useState([]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] pt-20 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
+     <>
+        <Skeliton />
+      </>
     );
   }
 
@@ -323,6 +324,7 @@ const [messages, setMessages] = useState([]);
     <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] ">
       <div className="flex h-[calc(100vh)]">
         {/* Left Sidebar - Users List */}
+
         <div className={`${isMobile && mobileView === 'chat' ? 'hidden' : 'block'} ${isMobile ? 'w-full' : 'w-96'} backdrop-blur-xl border-r border-white/10 shadow-2xl`}>
           {/* Header */}
           <div className="p-4 md:p-6 border-b border-white/10">
