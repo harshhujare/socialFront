@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { hasPermission } from "../../lib/permissions";
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import BackButton from "../buttons/BackButton";
+import { useTheme } from '../../context/themecontext.jsx';
 const Add = () => {
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
@@ -22,6 +23,7 @@ const Add = () => {
   const navigate = useNavigate();
   const [hasAddBlogPermission, setHasAddBlogPermission] = useState(false);
   const [permissionLoading, setPermissionLoading] = useState(true);
+  const { theme } = useTheme(); 
 
   // Check if user has permission to add blog
   useEffect(() => {
@@ -185,7 +187,7 @@ const Add = () => {
   }
 
   return (
-    <div className="min-h-screen  w-full flex items-center justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
+    <div className={`min-h-screen  w-full flex items-center justify-center px-4 bg-gradient-to-br ${theme.colors.primary} relative overflow-hidden`}>
    
       <div className="w-full max-w-lg p-0">
                     {isMobile&& <BackButton/>}

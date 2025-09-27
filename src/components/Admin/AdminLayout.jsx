@@ -1,4 +1,6 @@
 import React from 'react';
+import { useTheme } from '../../context/themecontext.jsx';
+
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/authcontext';
 import MobileMenu from '../UI/MobileMenu';
@@ -13,6 +15,7 @@ import {
 } from 'react-icons/fi';
 
 const AdminLayout = ({ children, embedded = false }) => {
+  const { theme } = useTheme();
   const location = useLocation();
   const { user, handelLogout } = useAuth();
 
@@ -24,9 +27,8 @@ const AdminLayout = ({ children, embedded = false }) => {
   if (embedded) {
     return <>{children}</>;
   }
-
   return (
-    <div className="min-h-screen w-full pt-16 flex items-start justify-center flex-col px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
+    <div className={`min-h-screen w-full pt-16 flex items-start justify-center flex-col px-4 bg-gradient-to-br ${theme.colors.primary} relative overflow-hidden transition-colors duration-500`}>
       {/* Mobile Menu */}
       <MobileMenu>
         <div className="flex flex-col h-full">

@@ -1,8 +1,9 @@
 import React from 'react'
-
+import { useTheme } from '../../../context/themecontext.jsx';
 const Skeliton = () => {
+const { theme } = useTheme(); 
 return (
-<div className="flex h-screen bg-[#0f0f2d] text-white">
+<div className={`flex h-screen ${theme.colors.primary} text-white`}>
 {/* Sidebar */}
 <div className="w-80 border-r border-gray-700 p-4 flex flex-col">
 <div className="h-10 bg-gray-700/50 rounded mb-4 animate-pulse"></div>

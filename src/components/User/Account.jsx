@@ -4,11 +4,14 @@ import { useAuth } from "../../../context/authcontext.jsx";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaPen, FaPlus, FaTrash, FaEye } from "react-icons/fa";
 import { followUser, UnfollowUser } from "../../lib/utilAip.js";
-import AccountSkeleton from "../UI/AccountSkeleton.jsx";
+import AccountSkeleton from "../UI/Skeletons/AccountSkeleton.jsx";
 import { useMediaQuery } from '../../hooks/useMediaQuery.js';
 import BackButton from '../buttons/BackButton.jsx';
 import Blogcard from "../UI/Blogcard.jsx";
+import { useTheme } from "../../context/themecontext.jsx";
+import ThemeSettings from "../UI/ThemeSettings.jsx";
 export default function AccountPage() {
+  const { theme } = useTheme();
   const { id } = useParams();
   const { user, handelLogout } = useAuth();
   const navigate = useNavigate();
@@ -209,20 +212,23 @@ export default function AccountPage() {
 
   return (
     <>
-      <div className="min-h-screen w-full pt-0 pb-10 flex justify-center px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
+      <div className="min-h-screen w-full pt-0 pb-10 flex justify-center px-4 relative overflow-hidden from-[#141416] via-[#252528] to-[#222425] ">
         {/* Ambient light effects */}
 
         <div
-          className="fixed top-0 left-0 w-96 h-96 bg-purple-500 opacity-30 rounded-full blur-3xl animate-pulse -z-10"
+          className={`fixed top-0 left-0 w-96 h-96 ${theme.colors.ambientPurple} opacity-30 rounded-full blur-3xl animate-pulse -z-10`}
           style={{ filter: "blur(120px)", left: "-10%", top: "-10%" }}
         ></div>
         <div
-          className="fixed bottom-0 right-0 w-96 h-96 bg-blue-400 opacity-30 rounded-full blur-3xl animate-pulse -z-10"
+          className={`fixed bottom-0 right-0 w-96 h-96 ${theme.colors.ambientBlue} opacity-30 rounded-full blur-3xl animate-pulse -z-10`}
           style={{ filter: "blur(120px)", right: "-10%", bottom: "-10%" }}
         ></div>
 
         <div className="w-full max-w-5xl">
-         
+          <div className="w-full flex justify-end pt-4 mb-2">
+            <ThemeSettings />
+          </div>
+
           {/* Profile Header Section */}
           <div
             className="rounded-3xl shadow-2xl p-8 backdrop-blur-xl border border-white/20 bg-white/10 animate-fade-in mb-8"

@@ -32,20 +32,18 @@ const Hero = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchBlogs();
     // eslint-disable-next-line
   }, [page]);
 
   return (
-    <div className="min-h-screen  w-full bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden flex flex-col">
+    <div className="min-h-screen w-full relative overflow-hidden flex flex-col transition-colors duration-500">
       {/* Decorative blurred shapes */}
      
       {/* Hero Header */}
       <header className="w-full max-w-5xl mx-auto pt-4 pb-8 px-4 text-center">
-        <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-200 to-purple-200 drop-shadow mb-4 animate-fade-in">Welcome Bro!</h1>
-        <p className="text-xl md:text-2xl text-blue-200/90 mb-6 animate-fade-in-slow">Discover, read, and share amazing MEME from our community.</p>
+        <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-200 to-purple-200 drop-shadow mb-4 animate-fade-in">sasta Instagram</h1>
         <div className="flex flex-col md:flex-row items-center justify-center gap-4 animate-fade-in-slow">
           <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-2 w-full md:w-96">
             <input

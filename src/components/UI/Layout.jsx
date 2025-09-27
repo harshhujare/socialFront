@@ -3,9 +3,9 @@ import Sidebar from './Sidebar';
 
 const Layout = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden transition-colors duration-500">
       <Sidebar />
-      <div className="md:pl-64 pt-8 pb-20 md:pb-0 transition-all duration-300">
+      <div className="md:pl-64  pb-20 md:pb-0 transition-all duration-300">
         {children}
       </div>
     </div>

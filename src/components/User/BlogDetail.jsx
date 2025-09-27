@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api, { API_BASE_URL } from '../../lib/api';
 import { useAuth } from '../../../context/authcontext';
 import { hasPermission } from '../../lib/permissions';
-
+import { useTheme } from '../../context/themecontext.jsx';
 function stringToColor(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -39,7 +39,7 @@ const BlogDetail = () => {
   const [copying, setCopying] = useState(false);
   const [canComment, setCanComment] = useState(false);
   const [canLike, setCanLike] = useState(false);
-
+const { theme } = useTheme(); 
   const normalizeId = (value) => {
     try {
       if (value == null) return '';
@@ -366,12 +366,12 @@ const BlogDetail = () => {
       {/* Reading Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-1 bg-gray-800 z-50">
         <div 
-          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+          className={`h-full ${theme.colors.primary} transition-all duration-300`}
           style={{ width: `${readingProgress}%` }}
         ></div>
       </div>
 
-      <div className="min-h-screen pt-20 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] py-8 px-4">
+      <div className={`min-h-screen pt-20 bg-gradient-to-br ${theme.colors.primary} py-8 px-4`}>
         <div className="max-w-4xl mx-auto">
           {/* Header with back button */}
           <div className="flex items-center justify-between mb-6">

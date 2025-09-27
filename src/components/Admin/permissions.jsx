@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
+import { useTheme } from '../../context/themecontext.jsx';
 
 const Permissions = () => {
   const [permissions, setPermissions] = useState([]);
@@ -17,47 +18,38 @@ const Permissions = () => {
     { key: 'like', label: 'Like' }
   ];
 
-  // Initialize permissions data structure
   const initializePermissionsData = () => {
-    const defaultPermissions = {};
-    roles.forEach(role => {
-      defaultPermissions[role] = {};
-      permissionTypes.forEach(perm => {
-        defaultPermissions[role][perm.key] = false;
-      });
+    const def = {};
+    roles.forEach(r => {
+      def[r] = {};
+      permissionTypes.forEach(p => { def[r][p.key] = false; });
     });
-    return defaultPermissions;
+    return def;
   };
 
   const [permissionsData, setPermissionsData] = useState(initializePermissionsData());
 
-  // Fetch permissions from backend
   const fetchPermissions = async () => {
     try {
       setLoading(true);
       const response = await api.get('/permissions');
       if (response.data.success) {
-        const fetchedPermissions = response.data.data;
-        const newPermissionsData = initializePermissionsData();
-        
-        fetchedPermissions.forEach(rolePerm => {
-          if (newPermissionsData[rolePerm.role]) {
-            newPermissionsData[rolePerm.role] = rolePerm.permissions;
-          }
+        const fetched = response.data.data;
+        const next = initializePermissionsData();
+        fetched.forEach(rolePerm => {
+          if (next[rolePerm.role]) next[rolePerm.role] = rolePerm.permissions;
         });
-        
-        setPermissionsData(newPermissionsData);
-        setPermissions(fetchedPermissions);
+        setPermissionsData(next);
+        setPermissions(fetched);
       }
-    } catch (error) {
-      console.error('Error fetching permissions:', error);
+    } catch (err) {
+      console.error('Error fetching permissions:', err);
       setMessage('Error loading permissions');
     } finally {
       setLoading(false);
     }
   };
 
-  // Initialize default permissions
   const initializeDefaultPermissions = async () => {
     try {
       setSaving(true);
@@ -66,91 +58,75 @@ const Permissions = () => {
         setMessage('Default permissions initialized successfully!');
         fetchPermissions();
       }
-    } catch (error) {
-      console.error('Error initializing permissions:', error);
+    } catch (err) {
+      console.error('Error initializing permissions:', err);
       setMessage('Error initializing permissions');
     } finally {
       setSaving(false);
     }
   };
 
-  // Handle permission change
   const handlePermissionChange = (role, permission, value) => {
     setPermissionsData(prev => ({
       ...prev,
-      [role]: {
-        ...prev[role],
-        [permission]: value
-      }
+      [role]: { ...prev[role], [permission]: value }
     }));
   };
 
-  // Save permissions for a specific role
   const saveRolePermissions = async (role) => {
-    console.log("role",role)
     try {
       setSaving(true);
-      const response = await api.put(`/permissions/${role}`, {
-        permissions: permissionsData[role]
-      });
-      
+      const response = await api.put(`/permissions/${role}`, { permissions: permissionsData[role] });
       if (response.data.success) {
         setMessage(`${role} permissions updated successfully!`);
         fetchPermissions();
       }
-    } catch (error) {
-      console.error(`Error updating ${role} permissions:`, error);
+    } catch (err) {
+      console.error(`Error updating ${role} permissions:`, err);
       setMessage(`Error updating ${role} permissions`);
     } finally {
       setSaving(false);
     }
   };
 
-  // Save all permissions
   const saveAllPermissions = async () => {
     try {
       setSaving(true);
-      const promises = roles.map(role => 
-        api.put(`/permissions/${role}`, {
-          permissions: permissionsData[role]
-        })
-      );
-      
+      const promises = roles.map(role => api.put(`/permissions/${role}`, { permissions: permissionsData[role] }));
       await Promise.all(promises);
       setMessage('All permissions updated successfully!');
       fetchPermissions();
-    } catch (error) {
-      console.error('Error updating permissions:', error);
+    } catch (err) {
+      console.error('Error updating permissions:', err);
       setMessage('Error updating permissions');
     } finally {
       setSaving(false);
     }
   };
 
-  useEffect(() => {
-    fetchPermissions();
-  }, []);
+  useEffect(() => { fetchPermissions(); }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading permissions...</p>
+          <p className="mt-4 text-white/80">Loading permissions...</p>
         </div>
       </div>
     );
   }
 
+  const { theme } = useTheme();
+
   return (
-    <div className="min-h-screen pt-20 w-full bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
+    <div className="min-h-screen pt-20 w-full relative overflow-hidden transition-colors duration-500">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10"></div>
-      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+      <div className={`absolute top-20 left-10 w-72 h-72 ${theme.colors.ambientBlue} rounded-full blur-3xl opacity-30`}></div>
+      <div className={`absolute bottom-20 right-10 w-96 h-96 ${theme.colors.ambientPurple} rounded-full blur-3xl opacity-30`}></div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="backdrop-blur-xl border border-white/20 bg-white/10 rounded-3xl shadow-2xl p-8"
+        <div className={`backdrop-blur-xl ${theme.colors.cardBorder} border ${theme.colors.cardBg} rounded-3xl shadow-2xl p-8`}
              style={{
                boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37), 0 1.5px 4px 0 rgba(0,0,0,0.10)",
                background: "linear-gradient(120deg, rgba(255,255,255,0.10) 60%, rgba(46,142,255,0.10) 100%)"
@@ -190,11 +166,11 @@ const Permissions = () => {
               <div className="flex items-center gap-2">
                 {message.includes('Error') ? (
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 001 1V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                 ) : (
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 011.414 0L9 10.586 7.707 9.293a1 1 0 01.414-1.414l2 2a1 1 0 011.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 )}
                 {message}
@@ -203,7 +179,7 @@ const Permissions = () => {
           )}
 
           {/* Permissions Table */}
-          <div className="overflow-x-auto rounded-2xl backdrop-blur-lg border border-white/20 bg-white/5">
+          <div className={`overflow-x-auto rounded-2xl backdrop-blur-lg ${theme.colors.cardBorder} border ${theme.colors.cardBg}`}>
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-white/10">

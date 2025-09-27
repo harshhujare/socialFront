@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/authcontext';
 import { hasPermission } from '../../lib/permissions';
+import { useTheme } from '../../context/themecontext';
 import { 
   FiHome, 
   FiSearch, 
@@ -13,6 +14,7 @@ import {
 } from 'react-icons/fi';
 
 const BottomNavBar = () => {
+  const { theme } = useTheme();
   const location = useLocation();
   const { IsLoggedIn = false, user = null } = useAuth() || {};
   const [canAddBlog, setCanAddBlog] = React.useState(false);
@@ -69,7 +71,7 @@ const BottomNavBar = () => {
   };
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-t from-blue-950 to-blue-900 border-t border-white/10 z-50 h-16 px-2 backdrop-blur-md">
+    <div className={`md:hidden fixed bottom-0 left-0 right-0 ${theme.colors.background} border-t border-white/10 z-50 h-16 px-2 backdrop-blur-md`}>
       <div className="flex justify-around items-center h-full max-w-md mx-auto">
         <NavItem to="/" icon={FiHome} />
         <NavItem 

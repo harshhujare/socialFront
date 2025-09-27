@@ -14,6 +14,7 @@ import AdminLayout from "./components/Admin/AdminLayout";
 import ChatBoard from "./components/User/ChatBoard";
 import DebugPermissions from "./components/DebugPermissions";
 import { AuthProvider } from "../context/authcontext";
+import { ThemeProvider } from "./context/themecontext.jsx";
 
 import Protected from "./Protected";
 import { BrowserRouter, Route, Router, Link, Routes } from "react-router-dom";
@@ -23,6 +24,7 @@ const App = () => {
   return (
     <>
       <BrowserRouter>
+      <ThemeProvider>
       <AuthProvider>
         <Routes>
            <Route path="/Signup" element={<Layout>  <Signup />  </Layout>} />
@@ -45,6 +47,7 @@ const App = () => {
          
         </Routes>
         </AuthProvider>
+      </ThemeProvider>
       </BrowserRouter>
     </>
   );

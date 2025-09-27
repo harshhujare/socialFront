@@ -5,6 +5,8 @@ import { hasPermission } from "../../lib/permissions";
 import MobileMenu from "./MobileMenu";
 import BottomNavBar from "./BottomNavBar";
 import { API_BASE_URL } from "../../lib/api";
+import { useTheme } from "../../context/themecontext.jsx";
+
 import { 
   FiHome, 
   FiSearch, 
@@ -17,35 +19,16 @@ import {
 } from "react-icons/fi";
 
 const Sidebar = () => {
+  const { theme } = useTheme();
   const location = useLocation();
   const { IsLoggedIn = false, user = null, handelLogout = () => {}, loading = false } = useAuth() || {};
-  const [canAddBlog, setCanAddBlog] = useState(false);
+  
+  const [canAddBlog, setCanAddBlog] = useState(true);
   const [IsChatOpen, setIsChatOpen] = useState(false);
   // Don't render until auth context is loaded
   if (loading) {
     return null;
   }
-
-  // Check if user can add blog
-  useEffect(() => {
-    const checkAddBlogPermission = async () => {
-      // Only check if user is logged in and has a role
-      if (!IsLoggedIn || !user?.role) {
-        setCanAddBlog(false);
-        return;
-      }
-
-      try {
-        const canAdd = await hasPermission(user.role, 'addBlog');
-        setCanAddBlog(canAdd);
-      } catch (error) {
-        console.error('Error checking add blog permission:', error);
-        setCanAddBlog(false);
-      }
-    };
-
-    checkAddBlogPermission();
-  }, [IsLoggedIn, user]);
 
   const isActive = (path) => {
     return location.pathname === path ? "bg-blue-600/20" : "";
@@ -61,12 +44,12 @@ const Sidebar = () => {
     return (
       <Link 
         to={to} 
-        className={`flex items-center gap-4 p-3 rounded-xl transition-all hover:bg-white/10 ${isActive(to)}`}
+        className={`flex items-center gap-4 p-3 rounded-xl transition-all hover:bg-white/20 ${isActive(to)}`}
       >
-        <div className="text-white text-xl">
+        <div className={`text-xl ${theme.colors.textPrimary}`}>
           <Icon />
         </div>
-        <span className="text-white">{label}</span>
+        <span className={`${theme.colors.textPrimary}`}>{label}</span>
       </Link>
     );
   };
@@ -82,8 +65,9 @@ const Sidebar = () => {
       <BottomNavBar />
 
       {/* Sidebar for desktop */}
-      <div className="fixed left-0 top-0 bottom-0 w-64 bg-gradient-to-b from-blue-800 to-blue-950 backdrop-blur-md border-r border-white/10 z-40 transition-all duration-300 transform -translate-x-full md:translate-x-0">
+      <div className={`fixed left-0 top-0 bottom-0 w-64 backdrop-blur-md ${theme.colors.cardBorder} border-r ${theme.colors.cardBg} z-40 transition-all duration-300 transform -translate-x-full md:translate-x-0`}>
         <div className="flex flex-col h-full p-4">
+
           {/* Logo */}
           <div className="flex items-center justify-center py-6">
             <img src="/assets/logo.png" alt="Logo" className="w-12 h-12" />
@@ -105,33 +89,30 @@ const Sidebar = () => {
             }} />
             <NavLink to="/Add" icon={FiPlusSquare} label="Create Post" condition={canAddBlog} />
             <NavLink to="/chat" icon={FiMessageCircle} label="Messages" condition={IsLoggedIn} />
-            <NavLink to={`/Account/${user?._id}`} icon={FiUser} label="Profile" condition={IsLoggedIn} />
             <NavLink to="/dashboard" icon={FiSettings} label="Dashboard" condition={IsLoggedIn && (user?.role === "ADMIN" || user?.role === "APPROVER")} />
             <NavLink to="/Signup" icon={FiLogIn} label="Sign Up" condition={!IsLoggedIn} />
           </nav>
 
           {/* User info at bottom */}
           {IsLoggedIn && user && (
-            <div className="border-t border-white/10 pt-4 mt-auto">
-              <Link to={`/Account/${user?._id}`} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/10">
+            <div className={`pt-4 mt-auto ${theme.colors.cardBorder} border-t`}>
+              <Link to={`/Account/${user?._id}`} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/20">
                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center overflow-hidden">
                   {user.profileImgUrl ? (
                     <img src={`${user.profileImgUrl}`} alt={user.fullname} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/assets/image.png'; }} />
                   ) : (
-                    <span className="text-white text-sm">{user.fullname?.charAt(0)}</span>
+                    <span className={`text-sm ${theme.colors.textPrimary}`}>{user.fullname?.charAt(0)}</span>
                   )}
                 </div>
                 <div>
-                  <div className="text-white font-medium">{user.fullname}</div>
-                  <div className="text-white/60 text-xs">{user.role}</div>
+                  <div className={`font-medium ${theme.colors.textPrimary}`}>{user.fullname}</div>
+                  <div className={`text-xs ${theme.colors.textSecondary}`}>{user.role}</div>
                 </div>
               </Link>
             </div>
           )}
         </div>
       </div>
-
-      {/* Mobile overlay is now handled by MobileMenu component */}
 
       {/* Content padding for desktop */}
       <div className="md:pl-64 transition-all duration-300">

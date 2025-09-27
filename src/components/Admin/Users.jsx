@@ -52,7 +52,7 @@ const Users = () => {
   }, [users, query]);
 
   return (
-    <div className="min-h-screen pt-20 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] p-4 md:p-8">
+    <div className="min-h-screen pt-20 p-4 md:p-8 transition-colors duration-500">
       <div className="max-w-6xl mx-auto mt-10">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-white text-2xl font-bold">Users</h1>

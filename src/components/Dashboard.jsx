@@ -117,7 +117,7 @@ const Bars = () => {
 const Dashboard = () => {
   const [activeView, setActiveView] = React.useState("overview");
   return (
-    <div className="min-h-screen w-full pt-20 flex items-center justify-center flex-col px-4 bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] relative overflow-hidden">
+    <div className="min-h-screen w-full pt-20 flex items-center justify-center flex-col px-4 relative overflow-hidden transition-colors duration-500">
       {/* Top bar */}
 
       {/* Sidebar */}

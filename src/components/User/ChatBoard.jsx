@@ -7,12 +7,10 @@ import MessageBubble from './MessageBubble';
 import Skeliton from '../UI/Skeletons/Skeliton';
 // Helper function for formatting message time
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-
-
-
-
+import { useTheme } from '../../context/themecontext.jsx';
 
 const ChatBoard = () => {
+  const { theme } = useTheme();
   const { user } = useAuth();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [mobileView, setMobileView] = useState('contacts'); // 'contacts' or 'chat'
@@ -321,11 +319,11 @@ const [messages, setMessages] = useState([]);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a1a2e] via-[#23234b] to-[#0f2027] ">
+    <div className="min-h-screen transition-colors duration-500 ">
       <div className="flex h-[calc(100vh)]">
         {/* Left Sidebar - Users List */}
 
-        <div className={`${isMobile && mobileView === 'chat' ? 'hidden' : 'block'} ${isMobile ? 'w-full' : 'w-96'} backdrop-blur-xl border-r border-white/10 shadow-2xl`}>
+        <div className={`${isMobile && mobileView === 'chat' ? 'hidden' : 'block'} ${isMobile ? 'w-full' : 'w-96'} backdrop-blur-xl shadow-2xl border-r border-white/10`}>
           {/* Header */}
           <div className="p-4 md:p-6 border-b border-white/10">
             <h1 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">Chats</h1>
@@ -380,7 +378,7 @@ const [messages, setMessages] = useState([]);
                   key={user._id}
                   onClick={() => handleMobileUserSelect(userData)}
                   className={`p-4 cursor-pointer transition-all duration-200 hover:bg-white/10 hover:shadow-lg ${
-                    isSelected ? 'bg-purple-600/20 border-r-2 border-purple-500 shadow-lg' : ''
+                    isSelected ? 'bg-white/20 border-r-2 border-blue-500 shadow-lg' : ''
                   }`}
                 >
                   <div className="flex items-center space-x-2 md:space-x-3">
@@ -558,7 +556,7 @@ const [messages, setMessages] = useState([]);
                   <button 
                     onClick={handleSendMessage}
                     disabled={!messageText.trim()}
-                    className="p-2 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all text-white"
+                    className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all text-white"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
