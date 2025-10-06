@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import api, { API_BASE_URL } from '../lib/api';
+import api, { API_BASE_URL } from '../../lib/api';
 
 const statusColor = (isActive) => (isActive ? 'text-emerald-300 bg-emerald-500/10 border-emerald-400/30' : 'text-rose-300 bg-rose-500/10 border-rose-400/30');
 

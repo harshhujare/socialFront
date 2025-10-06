@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../../context/authcontext';
-import { getFollowers, getFollowing } from '../../lib/utilAip';
+import { getMutuals } from '../../lib/utilAip';
 import { API_BASE_URL } from '../../lib/api';
 import { socket } from '../Socket';       
 import MessageBubble from './MessageBubble';
 import Skeliton from '../UI/Skeletons/Skeliton';
+import { setMessages,setSelectedConversation } from '../ChatSlice/ConversationSlice.jsx';
 // Helper function for formatting message time
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useTheme } from '../../context/themecontext.jsx';
-
+import { useDispatch, useSelector } from "react-redux";
 const ChatBoard = () => {
   const { theme } = useTheme();
   const { user } = useAuth();
@@ -16,12 +17,10 @@ const ChatBoard = () => {
   const [mobileView, setMobileView] = useState('contacts'); // 'contacts' or 'chat'
   
 const [messages, setMessages] = useState([]);
-  const [followers, setFollowers] = useState([]);
-  const [following, setFollowing] = useState([]);
+  const [mutuals, setMutuals] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('following'); // 'following' or 'followers'
   const [messageText, setMessageText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
@@ -93,7 +92,7 @@ const [messages, setMessages] = useState([]);
 
     // listen for typing events
     socket.on("user_typing", (data) => {
-      if (data.from === selectedChat?._id) {
+      if (data.from === selectedChat?.userID) {
         setIsTyping(data.isTyping);
       }
     });
@@ -136,22 +135,15 @@ const [messages, setMessages] = useState([]);
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const [followersRes, followingRes] = await Promise.all([
-        getFollowers(user._id),
-        getFollowing(user._id)
-      ]);
-      
-      if (followersRes.success) {
-        setFollowers(followersRes.followers);
-      }
-      if (followingRes.success) {
-        setFollowing(followingRes.following);
+      const mutualsRes = await getMutuals(user._id);
+      // console.log("Mutual Friends22:", mutualsRes);
+      if (mutualsRes) {
+        setMutuals(mutualsRes || []);
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
-      // Set empty arrays on error to prevent UI issues
-      setFollowers([]);
-      setFollowing([]);
+      console.error('Error fetching mutual users:', error);
+      // Set empty array on error to prevent UI issues
+      setMutuals([]);
     } finally {
       setLoading(false);
     }
@@ -166,19 +158,17 @@ const [messages, setMessages] = useState([]);
   };
 
   const filteredUsers = () => {
-    const users = activeTab === 'following' ? following : followers;
-    if (!searchQuery) return users;
+    if (!searchQuery) return mutuals;
     
-    return users.filter(userData => {
-      const user = activeTab === 'following' ? userData.following : userData.follower;
-      return user.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    return mutuals.filter(userData => {
+      return userData.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             userData.email?.toLowerCase().includes(searchQuery.toLowerCase());
     });
   };
-
+  // console.log("filteredUsers",filteredUsers());
+  
   const handleUserSelect = (userData) => {
-    const selectedUser = activeTab === 'following' ? userData.following : userData.follower;
-    setSelectedChat(selectedUser);
+    setSelectedChat(userData);
     // Clear messages when switching users
     setMessages([]);
     // TODO: Load chat history from backend when implemented
@@ -223,8 +213,8 @@ const [messages, setMessages] = useState([]);
       setMessages((prev) => [...prev, newMessage]);
       
       // Send via socket
-      console.log('Sending message to:', selectedChat._id, 'Content:', messageText);
-      socket.emit("private_message", { to: selectedChat._id, content: messageText });
+      console.log('Sending message to:', selectedChat.userID, 'Content:', messageText);
+      socket.emit("private_message", { to: selectedChat.userID, content: messageText });
       console.log( "alll messages",messages);
       // Clear input
       setMessageText('');
@@ -250,10 +240,10 @@ const [messages, setMessages] = useState([]);
     setMessageText(e.target.value);
     // Emit typing event
     if (socket && selectedChat) {
-      socket.emit('typing', { to: selectedChat._id, isTyping: true });
+      socket.emit('typing', { to: selectedChat.userID, isTyping: true });
       // Clear typing indicator after 3 seconds
       setTimeout(() => {
-        socket.emit('typing', { to: selectedChat._id, isTyping: false });
+        socket.emit('typing', { to: selectedChat.userID, isTyping: false });
       }, 3000);
     }
   };
@@ -277,6 +267,7 @@ const [messages, setMessages] = useState([]);
 
   // Format date for message headers
   const formatMessageDate = (dateString) => {
+    
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);
@@ -342,62 +333,41 @@ const [messages, setMessages] = useState([]);
               </svg>
             </div>
 
-            {/* Tab Navigation */}
-            <div className="flex mt-3 md:mt-4 space-x-1 md:space-x-2">
-              <button
-                onClick={() => setActiveTab('following')}
-                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium transition-all text-sm md:text-base ${
-                  activeTab === 'following'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white/10 text-white/80 hover:bg-white/20'
-                }`}
-              >
-                Following ({following.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('followers')}
-                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium transition-all text-sm md:text-base ${
-                  activeTab === 'followers'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white/10 text-white/80 hover:bg-white/20'
-                }`}
-              >
-                Followers ({followers.length})
-              </button>
-            </div>
+            {/* Mutual Users Info */}
+            
           </div>
 
                   {/* Users List */}
         <div className="overflow-y-auto h-[calc(100vh-230px)] md:h-[calc(100vh-280px)]">
             {filteredUsers().map((userData, index) => {
-              const user = activeTab === 'following' ? userData.following : userData.follower;
-              const isSelected = selectedChat?._id === user._id;
+              const isSelected = selectedChat?.userID === userData.userID;
               
               return (
                 <div
-                  key={user._id}
+                  key={userData.userID}
                   onClick={() => handleMobileUserSelect(userData)}
-                  className={`p-4 cursor-pointer transition-all duration-200 hover:bg-white/10 hover:shadow-lg ${
-                    isSelected ? 'bg-white/20 border-r-2 border-blue-500 shadow-lg' : ''
+                  className={`p-4 cursor-pointer transition-all duration-200 hover:bg-[rgba(255,255,255,0.1)] hover:shadow-lg ${
+                    isSelected ? 'bg-[rgba(0,0,0,0.1)] border-r-2 border-blue-500 shadow-lg' : ''
                   }`}
                 >
+                
                   <div className="flex items-center space-x-2 md:space-x-3">
                     <div className="relative">
                       <img
-                        src={getProfileImage(user)}
-                        alt={user.fullname}
+                        src={userData.profileImgUrl || getProfileImage(userData)}
+                        alt={userData.fullName}
                         className="w-10 md:w-12 h-10 md:h-12 rounded-full object-cover border-2 border-white/20"
                       />
                       <div className="absolute -bottom-1 -right-1 w-3 md:w-4 h-3 md:h-4 bg-green-500 rounded-full border-2 border-black animate-pulse"></div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-white font-medium truncate text-sm md:text-base">{user.fullname}</h3>
+                        <h3 className="text-white font-medium truncate text-sm md:text-base">{userData.fullName}</h3>
                         <span className="text-[10px] md:text-xs text-white/60">
-                          {formatTime(userData.createdAt)}
+                          Online
                         </span>
                       </div>
-                     
+                      <p className="text-white/60 text-xs truncate">Mutual connection</p>
                     </div>
                   </div>
                 </div>
@@ -419,8 +389,8 @@ const [messages, setMessages] = useState([]);
                     <svg className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-3 md:mb-4 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <p className="text-base md:text-lg font-medium">No {activeTab} yet</p>
-                    <p className="text-xs md:text-sm">Start following users to see them here</p>
+                    <p className="text-base md:text-lg font-medium">No mutual connections yet</p>
+                    <p className="text-xs md:text-sm">Connect with users who follow each other to see them here</p>
                   </div>
                 )}
               </div>
@@ -447,12 +417,12 @@ const [messages, setMessages] = useState([]);
                       </button>
                     )}
                     <img
-                      src={getProfileImage(selectedChat)}
-                      alt={selectedChat.fullname}
+                      src={selectedChat.profileImgUrl || getProfileImage(selectedChat)}
+                      alt={selectedChat.fullName}
                       className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
                     />
                     <div>
-                      <h3 className="text-white font-medium">{selectedChat.fullname}</h3>
+                      <h3 className="text-white font-medium">{selectedChat.fullName}</h3>
                       <p className="text-white/60 text-sm">Online</p>
                     </div>
                   </div>
@@ -474,12 +444,12 @@ const [messages, setMessages] = useState([]);
                       </svg>
                     </div>
                     <h3 className="text-lg md:text-xl font-semibold mb-2">No messages yet</h3>
-                    <p className="text-xs md:text-sm opacity-80">Start your conversation with {selectedChat.fullname}</p>
+                    <p className="text-xs md:text-sm opacity-80">Start your conversation with {selectedChat.fullName}</p>
                     
                     {/* System Messages */}
                     <div className="mt-6 md:mt-8 space-y-2 md:space-y-3">
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 md:px-4 py-2 text-white/80 text-xs md:text-sm max-w-[90%] md:max-w-md text-center mx-auto">
-                        This is a secure chat with {selectedChat.fullname}. Messages are end-to-end encrypted.
+                        This is a secure chat with {selectedChat.fullName}. Messages are end-to-end encrypted.
                       </div>
                       
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 md:px-4 py-2 text-white/80 text-xs md:text-sm max-w-[90%] md:max-w-md text-center mx-auto">
@@ -501,7 +471,7 @@ const [messages, setMessages] = useState([]);
                             key={index}
                             message={message}
                             isOwnMessage={message.sender === user._id}
-                            senderName={message.sender === user._id ? user.fullname : selectedChat.fullname}
+                            senderName={message.sender === user._id ? user.fullname : selectedChat.fullName}
                           />
                                                  ))}
                        </div>
@@ -520,7 +490,7 @@ const [messages, setMessages] = useState([]);
                      <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                      <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                    </div>
-                   <span>{selectedChat.fullname} is typing...</span>
+                   <span>{selectedChat.fullName} is typing...</span>
                  </div>
                )}
 

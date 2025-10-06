@@ -1,6 +1,6 @@
 import React from "react";
 import Layout from "./components/UI/Layout";
-import Hero from "./components/Hero";
+import Hero from "./components/UI/Hero.jsx";
 import Signup from "./components/User/Signup";
 import Add from  "./components/User/Add"
 import Login from "./components/User/Login";
@@ -12,7 +12,7 @@ import Permissions from "./components/Admin/permissions";
 import Users from "./components/Admin/Users";
 import AdminLayout from "./components/Admin/AdminLayout";
 import ChatBoard from "./components/User/ChatBoard";
-import DebugPermissions from "./components/DebugPermissions";
+import DebugPermissions from "./components/Admin/DebugPermissions.jsx";
 import { AuthProvider } from "../context/authcontext";
 import { ThemeProvider } from "./context/themecontext.jsx";
 

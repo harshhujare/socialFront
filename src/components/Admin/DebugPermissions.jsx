@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/authcontext';
-import { hasPermission, fetchPermissions } from '../lib/permissions';
+import { hasPermission, fetchPermissions } from '../../lib/permissions';
 
 const DebugPermissions = () => {
   const { user, IsLoggedIn } = useAuth();

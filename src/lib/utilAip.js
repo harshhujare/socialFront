@@ -49,5 +49,14 @@ const fetchUsers = async () => {
       setLoading(false);
     }
   };
+  const getMutuals= async(userId)=>{
+    const res=await api.get(`follow/mutual/${userId}`);
+    // console.log("Mutual Friends:",res.data);
+    return res.data;
 
-export { followUser, UnfollowUser, getFollowers, getFollowing,fetchUsers};
+
+
+
+  }
+
+export { followUser, UnfollowUser, getFollowers, getFollowing,fetchUsers,getMutuals};
