@@ -25,6 +25,12 @@ const Sidebar = () => {
   
   const [canAddBlog, setCanAddBlog] = useState(true);
   const [IsChatOpen, setIsChatOpen] = useState(false);
+  
+  // Update chat state based on current location
+  useEffect(() => {
+    setIsChatOpen(location.pathname === "/chat");
+  }, [location.pathname]);
+  
   // Don't render until auth context is loaded
   if (loading) {
     return null;
@@ -36,14 +42,19 @@ const Sidebar = () => {
 
   const NavLink = ({ to, icon: Icon, label, condition = true }) => {
     if (!condition) return null;
-    if(to==="/chat"){
-      setIsChatOpen(true);
-    }else{
-      setIsChatOpen(false);
-    }
+    
+    const handleClick = () => {
+      if(to === "/chat"){
+        setIsChatOpen(true);
+      } else {
+        setIsChatOpen(false);
+      }
+    };
+    
     return (
       <Link 
         to={to} 
+        onClick={handleClick}
         className={`flex items-center gap-4 p-3 rounded-xl transition-all hover:bg-white/20 ${isActive(to)}`}
       >
         <div className={`text-xl ${theme.colors.textPrimary}`}>

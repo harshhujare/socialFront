@@ -28,8 +28,6 @@ const [messages, setMessages] = useState([]);
   useEffect(() => {
     if (user?._id) {
       fetchUsers();
-      // Connect socket only if it's not already connected. Socket is created with
-      //  autoConnect: false in Socket.js so we must call connect() explicitly.
       try {
         if (socket && !socket.connected) {
           console.log('Attempting to connect socket...');
@@ -92,7 +90,7 @@ const [messages, setMessages] = useState([]);
 
     // listen for typing events
     socket.on("user_typing", (data) => {
-      if (data.from === selectedChat?.userID) {
+      if (data.from === selectedChat?._id) {
         setIsTyping(data.isTyping);
       }
     });
@@ -161,7 +159,7 @@ const [messages, setMessages] = useState([]);
     if (!searchQuery) return mutuals;
     
     return mutuals.filter(userData => {
-      return userData.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      return userData.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
              userData.email?.toLowerCase().includes(searchQuery.toLowerCase());
     });
   };
@@ -213,8 +211,8 @@ const [messages, setMessages] = useState([]);
       setMessages((prev) => [...prev, newMessage]);
       
       // Send via socket
-      console.log('Sending message to:', selectedChat.userID, 'Content:', messageText);
-      socket.emit("private_message", { to: selectedChat.userID, content: messageText });
+      console.log('Sending message to:', selectedChat._id, 'Content:', messageText);
+      socket.emit("private_message", { to: selectedChat._id, content: messageText });
       console.log( "alll messages",messages);
       // Clear input
       setMessageText('');
@@ -240,10 +238,10 @@ const [messages, setMessages] = useState([]);
     setMessageText(e.target.value);
     // Emit typing event
     if (socket && selectedChat) {
-      socket.emit('typing', { to: selectedChat.userID, isTyping: true });
+      socket.emit('typing', { to: selectedChat._id, isTyping: true });
       // Clear typing indicator after 3 seconds
       setTimeout(() => {
-        socket.emit('typing', { to: selectedChat.userID, isTyping: false });
+        socket.emit('typing', { to: selectedChat._id, isTyping: false });
       }, 3000);
     }
   };
@@ -303,6 +301,8 @@ const [messages, setMessages] = useState([]);
 
   // Function to handle user selection and view change on mobile
   const handleMobileUserSelect = (userData) => {
+    setSelectedChat(userData._id);
+    console.log("first", userData._id);
     handleUserSelect(userData);
     if (isMobile) {
       setMobileView('chat');
@@ -319,7 +319,7 @@ const [messages, setMessages] = useState([]);
           <div className="p-4 md:p-6 border-b border-white/10">
             <h1 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">Chats</h1>
             
-            {/* Search Bar */}
+         
             <div className="relative">
               <input
                 type="text"
@@ -333,36 +333,34 @@ const [messages, setMessages] = useState([]);
               </svg>
             </div>
 
-            {/* Mutual Users Info */}
+            
             
           </div>
 
-                  {/* Users List */}
+              
         <div className="overflow-y-auto h-[calc(100vh-230px)] md:h-[calc(100vh-280px)]">
             {filteredUsers().map((userData, index) => {
-              const isSelected = selectedChat?.userID === userData.userID;
+              const isSelected = selectedChat?._id === userData._id;
               
               return (
                 <div
-                  key={userData.userID}
+                  key={userData._id || `user-${index}`}
                   onClick={() => handleMobileUserSelect(userData)}
-                  className={`p-4 cursor-pointer transition-all duration-200 hover:bg-[rgba(255,255,255,0.1)] hover:shadow-lg ${
-                    isSelected ? 'bg-[rgba(0,0,0,0.1)] border-r-2 border-blue-500 shadow-lg' : ''
-                  }`}
+ className={`p-4 cursor-pointer transition-all duration-200   hover:bg-[rgba(255,255,255,0.1)]  ${isSelected ? 'bg-[rgba(244,244,244,0.1)] border-r-2 border-blue-500 shadow-lg ' : '' }`}
                 >
                 
                   <div className="flex items-center space-x-2 md:space-x-3">
                     <div className="relative">
                       <img
                         src={userData.profileImgUrl || getProfileImage(userData)}
-                        alt={userData.fullName}
+                        alt={userData.fullname}
                         className="w-10 md:w-12 h-10 md:h-12 rounded-full object-cover border-2 border-white/20"
                       />
                       <div className="absolute -bottom-1 -right-1 w-3 md:w-4 h-3 md:h-4 bg-green-500 rounded-full border-2 border-black animate-pulse"></div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-white font-medium truncate text-sm md:text-base">{userData.fullName}</h3>
+                        <h3 className="text-white font-medium truncate text-sm md:text-base">{userData.fullname}</h3>
                         <span className="text-[10px] md:text-xs text-white/60">
                           Online
                         </span>
@@ -418,15 +416,14 @@ const [messages, setMessages] = useState([]);
                     )}
                     <img
                       src={selectedChat.profileImgUrl || getProfileImage(selectedChat)}
-                      alt={selectedChat.fullName}
+                      alt={selectedChat.fullname}
                       className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
                     />
                     <div>
-                      <h3 className="text-white font-medium">{selectedChat.fullName}</h3>
+                      <h3 className="text-white font-medium">{selectedChat.fullname}</h3>
                       <p className="text-white/60 text-sm">Online</p>
                     </div>
                   </div>
-         
                 </div>
               </div>
 
@@ -444,12 +441,12 @@ const [messages, setMessages] = useState([]);
                       </svg>
                     </div>
                     <h3 className="text-lg md:text-xl font-semibold mb-2">No messages yet</h3>
-                    <p className="text-xs md:text-sm opacity-80">Start your conversation with {selectedChat.fullName}</p>
+                    <p className="text-xs md:text-sm opacity-80">Start your conversation with {selectedChat.fullname}</p>
                     
                     {/* System Messages */}
                     <div className="mt-6 md:mt-8 space-y-2 md:space-y-3">
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 md:px-4 py-2 text-white/80 text-xs md:text-sm max-w-[90%] md:max-w-md text-center mx-auto">
-                        This is a secure chat with {selectedChat.fullName}. Messages are end-to-end encrypted.
+                        This is a secure chat with {selectedChat.fullname}. Messages are end-to-end encrypted.
                       </div>
                       
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 md:px-4 py-2 text-white/80 text-xs md:text-sm max-w-[90%] md:max-w-md text-center mx-auto">
@@ -468,10 +465,10 @@ const [messages, setMessages] = useState([]);
                         
                         {dayMessages.map((message, index) => (
                           <MessageBubble 
-                            key={index}
+                            key={message._id || `temp-${index}`}
                             message={message}
                             isOwnMessage={message.sender === user._id}
-                            senderName={message.sender === user._id ? user.fullname : selectedChat.fullName}
+                            senderName={message.sender === user._id ? user.fullname : selectedChat.fullname}
                           />
                                                  ))}
                        </div>
@@ -490,7 +487,7 @@ const [messages, setMessages] = useState([]);
                      <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                      <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                    </div>
-                   <span>{selectedChat.fullName} is typing...</span>
+                   <span>{selectedChat.fullname} is typing...</span>
                  </div>
                )}
 
